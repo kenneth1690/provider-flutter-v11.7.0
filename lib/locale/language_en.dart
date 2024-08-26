@@ -1,107 +1,107 @@
 import 'package:handyman_provider_flutter/locale/base_language.dart';
 
-class LanguageEn extends Languages {
+class LanguageEs extends Languages {
   @override
-  String planAboutToExpire(int days) => 'Your Plan Is About to Expire In $days Days';
+  String planAboutToExpire(int days) => 'Tu plan está a punto de expirar en $days días';
 
   @override
-  String get appName => 'Provider';
+  String get appName => 'Proveedor';
 
   @override
-  String get provider => 'Provider';
+  String get provider => 'Proveedor';
 
   @override
-  String get lblShowingOnly4Handyman => 'Showing Only 4 Handyman';
+  String get lblShowingOnly4Handyman => 'Mostrando solo 4 manitas';
 
   @override
-  String get lblRecentlyOnlineHandyman => 'Recently Online Handyman';
+  String get lblRecentlyOnlineHandyman => 'Manitas recientemente en línea';
 
   @override
-  String get lblStartDrive => 'Start Drive';
+  String get lblStartDrive => 'Iniciar conducción';
 
   @override
-  String get handyman => 'Handyman';
+  String get handyman => 'Manitas';
 
   @override
-  String get signIn => 'Sign In';
+  String get signIn => 'Iniciar sesión';
 
   @override
-  String get signUp => 'Sign Up';
+  String get signUp => 'Registrarse';
 
   @override
-  String get hintFirstNameTxt => 'First Name';
+  String get hintFirstNameTxt => 'Nombre';
 
   @override
-  String get hintLastNameTxt => 'Last Name';
+  String get hintLastNameTxt => 'Apellido';
 
   @override
-  String get hintContactNumberTxt => 'Contact Number';
+  String get hintContactNumberTxt => 'Número de contacto';
 
   @override
-  String get hintEmailAddressTxt => 'Email Address';
+  String get hintEmailAddressTxt => 'Dirección de correo electrónico';
 
   @override
-  String get hintUserNameTxt => 'User Name';
+  String get hintUserNameTxt => 'Nombre de usuario';
 
   @override
-  String get hintReenterPasswordTxt => 'Re-enter Password';
+  String get hintReenterPasswordTxt => 'Reingresar contraseña';
 
   @override
-  String get confirm => 'Confirm';
+  String get confirm => 'Confirmar';
 
   @override
-  String get forgotPassword => 'Forgot Password?';
+  String get forgotPassword => '¿Olvidaste tu contraseña?';
 
   @override
-  String get alreadyHaveAccountTxt => 'Already have an Account';
+  String get alreadyHaveAccountTxt => '¿Ya tienes una cuenta?';
 
   @override
-  String get rememberMe => 'Remember Me';
+  String get rememberMe => 'Recuérdame';
 
   @override
-  String get forgotPasswordTitleTxt => 'Enter your email address';
+  String get forgotPasswordTitleTxt => 'Ingresa tu dirección de correo electrónico';
 
   @override
-  String get resetPassword => 'Reset Password';
+  String get resetPassword => 'Restablecer contraseña';
 
   @override
-  String get editProfile => 'Edit profile';
+  String get editProfile => 'Editar perfil';
 
   @override
-  String get saveChanges => 'Save Changes';
+  String get saveChanges => 'Guardar cambios';
 
   @override
-  String get camera => 'Camera';
+  String get camera => 'Cámara';
 
   @override
-  String get language => 'App Language';
+  String get language => 'Idioma de la aplicación';
 
   @override
-  String get appTheme => 'App Theme';
+  String get appTheme => 'Tema de la aplicación';
 
   @override
-  String get bookingHistory => 'Booking History';
+  String get bookingHistory => 'Historial de reservas';
 
   @override
-  String get logout => 'Logout';
+  String get logout => 'Cerrar sesión';
 
   @override
-  String get afterLogoutTxt => 'Do you want to logout from the app? You can always logged in again!';
+  String get afterLogoutTxt => '¿Quieres cerrar sesión en la aplicación? ¡Siempre puedes iniciar sesión de nuevo!';
 
   @override
-  String get chooseTheme => 'Choose the App Theme';
+  String get chooseTheme => 'Elige el tema de la aplicación';
 
   @override
-  String get selectCountry => 'Select Country';
+  String get selectCountry => 'Seleccionar país';
 
   @override
-  String get selectState => 'Select State';
+  String get selectState => 'Seleccionar estado';
 
   @override
-  String get selectCity => 'Select City';
+  String get selectCity => 'Seleccionar ciudad';
 
   @override
-  String get changePassword => 'Change Password';
+  String get changePassword => 'Cambiar contraseña';
 
   @override
   String get passwordNotMatch => "Password does not match";
