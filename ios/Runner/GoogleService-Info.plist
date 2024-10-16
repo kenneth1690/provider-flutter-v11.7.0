@@ -3,34 +3,36 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>438524885554-70utjosf8vpmn02la2pvhe5g4ld0aoer.apps.googleusercontent.com</string>
+	<string>220480348179-qbv8qv21r6jf0g65njk53190hrv33du8.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.438524885554-70utjosf8vpmn02la2pvhe5g4ld0aoer</string>
+	<string>com.googleusercontent.apps.220480348179-qbv8qv21r6jf0g65njk53190hrv33du8</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>438524885554-22gjfq85gqjkglb9odqp1c4ul4ndpf8t.apps.googleusercontent.com</string>
+	<string>220480348179-p7jlk2t16a1qkk10g99l8qd90npieqpt.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyABNz-zXkMtGvH1tpWyqJ6oAals5jpgOs0</string>
+	<string>AIzaSyA5grJ7N1phRXirWL85SolhzEq83iQaY64</string>
 	<key>GCM_SENDER_ID</key>
-	<string>438524885554</string>
+	<string>220480348179</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.iqonic.provider</string>
+	<string>com.kimiiservicios.proveedor</string>
 	<key>PROJECT_ID</key>
-	<string>bookingsystem-3be5c</string>
+	<string>kimiiservicios</string>
 	<key>STORAGE_BUCKET</key>
-	<string>bookingsystem-3be5c.appspot.com</string>
+	<string>kimiiservicios.appspot.com</string>
 	<key>IS_ADS_ENABLED</key>
-	<false/>
+	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false/>
+	<false></false>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true/>
+	<true></true>
 	<key>IS_GCM_ENABLED</key>
-	<true/>
+	<true></true>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true/>
+	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:438524885554:ios:dda6ca84dc146b384f9a2b</string>
+	<string>1:220480348179:ios:bc4e92087c4fe21e841fe6</string>
+	<key>DATABASE_URL</key>
+	<string>https://kimiiservicios.firebaseio.com</string>
 </dict>
 </plist>
