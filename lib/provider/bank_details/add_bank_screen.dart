@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:handyman_provider_flutter/components/base_scaffold_widget.dart';
 import 'package:handyman_provider_flutter/main.dart';
 import 'package:handyman_provider_flutter/networks/network_utils.dart';
@@ -11,6 +12,7 @@ import 'package:handyman_provider_flutter/utils/extensions/string_extension.dart
 import 'package:handyman_provider_flutter/utils/images.dart';
 import 'package:http/http.dart';
 import 'package:nb_utils/nb_utils.dart';
+
 import '../../models/bank_list_response.dart';
 import '../../models/base_response.dart';
 import '../../models/static_data_model.dart';
@@ -57,7 +59,7 @@ class _AddBankScreenState extends State<AddBankScreen> {
     multiPartRequest.fields[BankServiceKey.panNo] = panNumberCont.text;
     multiPartRequest.fields[BankServiceKey.bankAttachment] = '';
     multiPartRequest.fields[UserKeys.status] = getStatusValue().toString();
-    multiPartRequest.fields[UserKeys.isDefault] = widget.data?.isDefault.toString()??"0";
+    multiPartRequest.fields[UserKeys.isDefault] = widget.data?.isDefault.toString() ?? "0";
 
     multiPartRequest.headers.addAll(buildHeaderTokens());
 
@@ -160,25 +162,12 @@ class _AddBankScreenState extends State<AddBankScreen> {
                   ),
                   16.height,
                   AppTextField(
-                    textFieldType: isAndroid ? TextFieldType.PHONE : TextFieldType.NAME,
+                    textFieldType: TextFieldType.NAME,
                     controller: accNumberCont,
                     focus: accNumberFocus,
                     nextFocus: ifscCodeFocus,
                     decoration: inputDecoration(context, hint: languages.accountNumber, counter: false),
                     suffix: ic_password.iconImage(size: 10, fit: BoxFit.contain).paddingAll(14),
-                    validator: (accNumberCont) {
-                      if (accNumberCont == null || accNumberCont.isEmpty) {
-                        return languages.lblPleaseEnterAccountNumber;
-                      }
-                      if (!RegExp(r'^[0-9]+$').hasMatch(accNumberCont)) {
-                        return languages.lblAccountNumberMustContainOnlyDigits;
-                      }
-                      if (accNumberCont.length < 11 || accNumberCont.length > 16) {
-                        return languages.lblAccountNumberMustBetween11And16Digits;
-                      }
-                      return null;
-                    },
-                    maxLength: 16,
                   ),
                   16.height,
                   AppTextField(
@@ -227,6 +216,7 @@ class _AddBankScreenState extends State<AddBankScreen> {
               width: context.width(),
               onTap: () {
                 if (formKey.currentState!.validate()) {
+                  hideKeyboard(context);
                   update();
                 }
               },

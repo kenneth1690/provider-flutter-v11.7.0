@@ -24,9 +24,7 @@ class ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     init();
   }
 
-  Future<void> init() async {
-    //
-  }
+  Future<void> init() async {}
 
   Future<void> forgotPwd() async {
     if (formKey.currentState!.validate()) {

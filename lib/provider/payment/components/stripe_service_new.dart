@@ -32,6 +32,9 @@ class StripeServiceNew {
     String stripePaymentKey = '';
     String stripeURL = '';
     String stripePaymentPublishKey = '';
+    print('========${paymentSetting.testValue!.stripeKey}');
+    print('========${paymentSetting.liveValue!.stripePublickey}');
+
 
     if (paymentSetting.isTest == 1) {
       stripePaymentKey = paymentSetting.testValue!.stripeKey!;

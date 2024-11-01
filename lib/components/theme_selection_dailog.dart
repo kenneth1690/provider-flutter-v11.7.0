@@ -81,8 +81,12 @@ class ThemeSelectionDaiLogState extends State<ThemeSelectionDaiLog> {
                     appStore.setDarkMode(context.platformBrightness() == Brightness.dark);
                   } else if (val == THEME_MODE_LIGHT) {
                     appStore.setDarkMode(false);
+                    defaultToastBackgroundColor = Colors.black;
+                    defaultToastTextColor = Colors.white;
                   } else if (val == THEME_MODE_DARK) {
                     appStore.setDarkMode(true);
+                    defaultToastBackgroundColor = Colors.white;
+                    defaultToastTextColor = Colors.black;
                   }
                   await setValue(THEME_MODE_INDEX, val);
 

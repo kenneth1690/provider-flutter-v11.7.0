@@ -1,7 +1,6 @@
 // ignore_for_file: unnecessary_null_comparison
 
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -45,7 +44,7 @@ import 'package:handyman_provider_flutter/utils/extensions/string_extension.dart
 import 'package:handyman_provider_flutter/utils/model_keys.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../components/base_scaffold_widget.dart';
 import '../components/empty_error_state_widget.dart';
@@ -54,6 +53,7 @@ import '../provider/services/addons/component/service_addons_component.dart';
 import '../utils/images.dart';
 import '../utils/permissions.dart';
 import 'shimmer/booking_detail_shimmer.dart';
+import 'package:permission_handler_platform_interface/permission_handler_platform_interface.dart';
 
 class BookingDetailScreen extends StatefulWidget {
   final int bookingId;
@@ -64,11 +64,11 @@ class BookingDetailScreen extends StatefulWidget {
   BookingDetailScreenState createState() => BookingDetailScreenState();
 }
 
-class BookingDetailScreenState extends State<BookingDetailScreen> {
+class BookingDetailScreenState extends State<BookingDetailScreen> with WidgetsBindingObserver {
   late Future<BookingDetailResponse> future;
 
+  // region Variables
   UniqueKey _paymentUniqueKey = UniqueKey();
-
   GlobalKey countDownKey = GlobalKey();
   String? startDateTime = '';
   String? endDateTime = '';
@@ -82,158 +82,39 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
   BitmapDescriptor? customIcon;
   Timer? _locationUpdateTimer;
   Timer? locationTimers;
-  bool _isUpdatingLocation = false;
   bool isLocationLoader = false;
   GoogleMapController? mapController;
   LatLng? _currentPosition;
   CameraPosition _initialLocation = CameraPosition(target: LatLng(0.0, 0.0));
   String locationTime = DateTime.now().toString();
-
+  int providerLocationRefreshPeriodInSeconds = 30;
+  int handymanUpdateLocationRefreshPeriodInSeconds = 1;
+  String bookingStatus = "";
+  int handymanId = -1;
+  // endregion Variables
 
   @override
   void initState() {
     init();
+    _createCustomMarkerIcon();
     super.initState();
   }
 
-  Future<void> init({bool flag = false, bool isStartDrive = false}) async {
-    future = bookingDetail({CommonKeys.bookingId: widget.bookingId.toString()})
-        .then((val) async {
-      await _createCustomMarkerIcon();
-      await setLocationfun(data: val, isFirstTime: true);
-      startLocationUpdates(data: val);
-      if(isStartDrive){
-        locationTimer();
-      }
-      return val;
+  void init({bool flag = false, bool isStartDrive = false}) async {
+    future = bookingDetail({CommonKeys.bookingId: widget.bookingId.toString()}, callbackForStatus: (status, id) async {
+      bookingStatus = status;
+      handymanId = id;
+      afterBuildCreated(() => startLocationUpdates(status: status, handymanID: id, isFirstTimeLoad: true));
     });
     if (flag) {
       _paymentUniqueKey = UniqueKey();
       setState(() {});
     }
-    await _createCustomMarkerIcon();
-    await getHandymanLocation(widget.bookingId.toString());
-  }
-
-  Future<void> _createCustomMarkerIcon() async {
-    final ImageConfiguration imageConfiguration =
-        ImageConfiguration(size: Size(24, 24));
-    customIcon = await BitmapDescriptor.fromAssetImage(
-      imageConfiguration,
-      indicator_2,
-    );
-  }
-
-  Future<void> _getCurrentLocation({required bool isFirstTime}) async {
-    try {
-      handymanLocation = await getHandymanLocation(widget.bookingId.toString());
-      if (handymanLocation != null &&
-          handymanLocation!.data.latitude != null &&
-          handymanLocation!.data.longitude != null) {
-        setState(() {
-          if(isFirstTime){
-            locationTime = DateTime.parse(handymanLocation?.data.datetime.toString() ?? DateTime.now().toString()).timeAgo;
-             locationTimer();
-          }
-          _currentPosition = LatLng(
-            double.parse(handymanLocation!.data.latitude.toString()),
-            double.parse(handymanLocation!.data.longitude.toString()),
-          );
-
-          if (mapController != null) {
-            mapController!.animateCamera(CameraUpdate.newCameraPosition(
-              CameraPosition(
-                target: _currentPosition!,
-                zoom: 15.0,
-              ),
-            ));
-          }
-        });
-      } else {
-        _currentPosition = LatLng(0, 0);
-      }
-    } catch (e) {
-      _currentPosition = LatLng(0, 0);
-    }
-  }
-
-  void startLocationUpdates({BookingDetailResponse? data}) {
-    if (!_isUpdatingLocation) {
-      _locationUpdateTimer =
-          Timer.periodic(Duration(seconds: 30), (Timer timer) async {
-        setLocationfun(data: data);
-      });
-    }
-  }
-
-  setLocationfun({BookingDetailResponse? data, bool isFirstTime = false}) async {
-    if (mounted) {
-      try {
-        final bookingDetail = await data;
-        if (bookingDetail?.bookingDetail!.status == BookingStatusKeys.onGoing &&
-            isUserTypeHandyman) {
-            if(isFirstTime){
-            await  _getCurrentLocation(isFirstTime: true);
-            }
-          setLocation(widget.bookingId.toString());
-        } else if (bookingDetail?.bookingDetail!.status ==
-                BookingStatusKeys.onGoing &&
-            isUserTypeProvider) {
-          if (data!.handymanData!.isNotEmpty &&
-              appStore.userType != USER_TYPE_HANDYMAN &&
-              data.handymanData?.first.id == appStore.userId) {
-                if(isFirstTime){
-             await _getCurrentLocation(isFirstTime: true);
-            }
-            await setLocation(widget.bookingId.toString());
-          } else if (data.handymanData!.isNotEmpty &&
-              appStore.userType != USER_TYPE_HANDYMAN) {
-            setState(() {
-              isLocationLoader = true;
-            });
-            await _getCurrentLocation(isFirstTime:  false).whenComplete(() {
-              setState(() {
-                isLocationLoader = false;
-              });
-            });
-          }
-        }
-      } catch (e) {
-        stopLocationUpdates();
-      }
-    } else {
-      stopLocationUpdates();
-    }
-  }
-
-  shareComponent() {
-    String url =
-        'https://www.google.com/maps/search/?api=1&query=${handymanLocation?.data.latitude},${handymanLocation?.data.longitude}';
-    share(url: url);
-  }
-
-  void stopLocationUpdates() {
-    _locationUpdateTimer?.cancel();
-    _locationUpdateTimer = null;
-    _isUpdatingLocation = false;
-    locationTimers?.cancel();
-    locationTimers = null;
-  }
-
-  BookingDetailResponse? initialData() {
-    if (cachedBookingDetailList.any((element) =>
-        element.bookingDetail!.id == widget.bookingId.validate())) {
-      return cachedBookingDetailList.firstWhere(
-          (element) => element.bookingDetail!.id == widget.bookingId);
-    }
-    return null;
   }
 
   //region Methods
-  Future<void> confirmationRequestDialog(
-      BuildContext context, String status, BookingDetailResponse res) async {
-    if (status == BookingStatusKeys.complete &&
-        res.bookingDetail!.paymentMethod == PAYMENT_METHOD_COD) {
+  Future<void> confirmationRequestDialog(BuildContext context, String status, BookingDetailResponse res) async {
+    if (status == BookingStatusKeys.complete && res.bookingDetail!.paymentMethod == PAYMENT_METHOD_COD) {
       showInDialog(
         context,
         contentPadding: EdgeInsets.all(0),
@@ -257,9 +138,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     showConfirmDialogCustom(
       context,
       title: languages.confirmationRequestTxt,
-      primaryColor: status == BookingStatusKeys.rejected
-          ? Colors.redAccent
-          : primaryColor,
+      primaryColor: status == BookingStatusKeys.rejected ? Colors.redAccent : primaryColor,
       positiveText: languages.lblYes,
       negativeText: languages.lblNo,
       onAccept: (context) async {
@@ -278,8 +157,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     );
   }
 
-  Future<void> assignBookingDialog(
-      BuildContext context, int? bookingId, int? addressId) async {
+  Future<void> assignBookingDialog(BuildContext context, int? bookingId, int? addressId) async {
     AssignHandymanScreen(
       bookingId: bookingId,
       serviceAddressId: addressId,
@@ -291,80 +169,52 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     ).launch(context);
   }
 
-  Future<void> updateBooking(BookingDetailResponse bookDetail,
-      String updateReason, String updatedStatus) async {
+  Future<void> updateBooking(BookingDetailResponse bookDetail, String updateReason, String updatedStatus) async {
     DateTime now = DateTime.now();
     if (updatedStatus == BookingStatusKeys.inProgress) {
       startDateTime = DateFormat(BOOKING_SAVE_FORMAT).format(now);
       endDateTime = bookDetail.bookingDetail!.endAt.validate();
-      timeInterval =
-          bookDetail.bookingDetail!.durationDiff.validate().isEmptyOrNull
-              ? "0"
-              : bookDetail.bookingDetail!.durationDiff.validate();
-      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone
-          ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-          : bookDetail.bookingDetail!.paymentStatus.validate();
+      timeInterval = bookDetail.bookingDetail!.durationDiff.validate().isEmptyOrNull ? "0" : bookDetail.bookingDetail!.durationDiff.validate();
+      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : bookDetail.bookingDetail!.paymentStatus.validate();
       //
     } else if (updatedStatus == BookingStatusKeys.hold) {
       String? currentDateTime = DateFormat(BOOKING_SAVE_FORMAT).format(now);
       startDateTime = bookDetail.bookingDetail!.startAt.validate();
       endDateTime = currentDateTime;
-      var diff = DateTime.parse(currentDateTime)
-          .difference(
-              DateTime.parse(bookDetail.bookingDetail!.startAt.validate()))
-          .inMinutes;
-      num count =
-          int.parse(bookDetail.bookingDetail!.durationDiff.validate()) + diff;
+      var diff = DateTime.parse(currentDateTime).difference(DateTime.parse(bookDetail.bookingDetail!.startAt.validate())).inMinutes;
+      num count = int.parse(bookDetail.bookingDetail!.durationDiff.validate()) + diff;
       timeInterval = count.toString();
-      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone
-          ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-          : bookDetail.bookingDetail!.paymentStatus.validate();
+      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : bookDetail.bookingDetail!.paymentStatus.validate();
     } else if (updatedStatus == BookingStatusKeys.pendingApproval) {
       startDateTime = bookDetail.bookingDetail!.startAt.toString();
       endDateTime = bookDetail.bookingDetail!.endAt.toString();
       timeInterval = bookDetail.bookingDetail!.durationDiff.validate();
-      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone
-          ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-          : bookDetail.bookingDetail!.paymentStatus.validate();
+      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : bookDetail.bookingDetail!.paymentStatus.validate();
     } else if (updatedStatus == BookingStatusKeys.complete) {
-      if (bookDetail.bookingDetail!.paymentStatus == PENDING &&
-          bookDetail.bookingDetail!.paymentMethod == PAYMENT_METHOD_COD) {
+      if (bookDetail.bookingDetail!.paymentStatus == PENDING && bookDetail.bookingDetail!.paymentMethod == PAYMENT_METHOD_COD) {
         startDateTime = bookDetail.bookingDetail!.startAt.toString();
         endDateTime = bookDetail.bookingDetail!.endAt.toString();
-        timeInterval = "0";
+        timeInterval = bookDetail.bookingDetail!.durationDiff.validate();
         paymentStatus = PENDING_BY_ADMINS;
         confirmPaymentBtn = false;
         isCompleted = true;
       } else {
         endDateTime = DateFormat(BOOKING_SAVE_FORMAT).format(now);
         startDateTime = bookDetail.bookingDetail!.startAt.validate();
-        var diff = DateTime.parse(endDateTime.validate())
-            .difference(
-                DateTime.parse(bookDetail.bookingDetail!.startAt.validate()))
-            .inMinutes;
-        num count =
-            int.parse(bookDetail.bookingDetail!.durationDiff.validate()) + diff;
+        var diff = DateTime.parse(endDateTime.validate()).difference(DateTime.parse(bookDetail.bookingDetail!.startAt.validate())).inMinutes;
+        num count = int.parse(bookDetail.bookingDetail!.durationDiff.validate()) + diff;
         timeInterval = count.toString();
-        paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone
-            ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-            : bookDetail.bookingDetail!.paymentStatus.validate();
+        paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : bookDetail.bookingDetail!.paymentStatus.validate();
       }
       //
-    } else if (updatedStatus == BookingStatusKeys.rejected ||
-        updatedStatus == BookingStatusKeys.cancelled) {
-      startDateTime = bookDetail.bookingDetail!.startAt.validate().isNotEmpty
-          ? bookDetail.bookingDetail!.startAt.validate()
-          : bookDetail.bookingDetail!.date.validate();
+    } else if (updatedStatus == BookingStatusKeys.rejected || updatedStatus == BookingStatusKeys.cancelled) {
+      startDateTime = bookDetail.bookingDetail!.startAt.validate().isNotEmpty ? bookDetail.bookingDetail!.startAt.validate() : bookDetail.bookingDetail!.date.validate();
       endDateTime = DateFormat(BOOKING_SAVE_FORMAT).format(now);
       timeInterval = bookDetail.bookingDetail!.durationDiff.toString();
-      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone
-          ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-          : bookDetail.bookingDetail!.paymentStatus.validate();
+      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : bookDetail.bookingDetail!.paymentStatus.validate();
       //
     } else {
-      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone
-          ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-          : bookDetail.bookingDetail!.paymentStatus.validate();
+      paymentStatus = bookDetail.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : bookDetail.bookingDetail!.paymentStatus.validate();
     }
     countDownKey = GlobalKey();
     setState(() {});
@@ -385,10 +235,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
       if (paymentStatus == PENDING_BY_ADMINS) {
         finish(context);
       }
-      init(
-          flag: true,
-          isStartDrive:
-              updatedStatus == BookingStatusKeys.onGoing ? true : false);
+      init(flag: true, isStartDrive: updatedStatus == BookingStatusKeys.onGoing ? true : false);
     }).catchError((e) {
       appStore.setLoading(false);
       toast(e.toString(), print: true);
@@ -400,9 +247,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
 
   Future<void> getLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
       latitude = position.latitude.toString();
       longitude = position.longitude.toString();
     } catch (e) {
@@ -410,29 +255,23 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     }
   }
 
-  Future<void> setLocation(String bookingId) async {
-    if (await Permissions.locationPermissionsGranted()) {
-      await getLocation();
-      return updateLocation(bookingId, latitude ?? "", longitude ?? "")
-          .then((value) {
-        setState(() {
-          handymanLocation = value;
-          locationTime =
-              "${DateTime.parse(value.data.datetime.toString()).timeAgo}";
-        });
-      }).catchError((error) {
-        toast(error.toString());
-      }).whenComplete(() {});
-    } else {
-      setLocation(widget.bookingId.toString());
-    }
+  Future<void> setLocation() async {
+    await getLocation();
+    await updateLocation(widget.bookingId, latitude ?? "", longitude ?? "").then((value) async {
+      handymanLocation = value;
+      locationTime = "${DateTime.parse(value.data.datetime.toString()).timeAgo}";
+      locationTimer();
+      setState(() {});
+    }).catchError((error) {
+      toast(error.toString());
+    }).whenComplete(() {});
   }
 
-   locationTimer() {
-    locationTimers = Timer.periodic(Duration(seconds: 1), (Timer timer) {
-      setState(() {
-       locationTime = "${DateTime.parse(handymanLocation?.data.datetime.toString() ?? DateTime.now().toString()).timeAgo}";
-      });
+  locationTimer() {
+    locationTimers?.cancel();
+    locationTimers = Timer.periodic(Duration(seconds: handymanUpdateLocationRefreshPeriodInSeconds), (Timer timer) {
+      locationTime = "${DateTime.parse(handymanLocation?.data.datetime.toString() ?? DateTime.now().toString()).timeAgo}";
+      setState(() {});
     });
   }
 
@@ -446,11 +285,8 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     Map req = isEditExtraCharges
         ? {
             CommonKeys.id: val.bookingDetail!.id.validate(),
-            BookingUpdateKeys.durationDiff: timeInterval,
-            BookingUpdateKeys.paymentStatus:
-                val.bookingDetail!.isAdvancePaymentDone
-                    ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-                    : val.bookingDetail!.paymentStatus.validate(),
+            BookingUpdateKeys.durationDiff: val.bookingDetail!.durationDiff.toInt(),
+            BookingUpdateKeys.paymentStatus: val.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : val.bookingDetail!.paymentStatus.validate(),
             BookingUpdateKeys.status: BookingStatusKeys.complete,
           }
         : {
@@ -458,11 +294,8 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
             BookingUpdateKeys.startAt: val.bookingDetail!.startAt.toString(),
             BookingUpdateKeys.endAt: val.bookingDetail!.endAt.toString(),
             BookingUpdateKeys.status: BookingStatusKeys.complete,
-            BookingUpdateKeys.durationDiff: timeInterval,
-            BookingUpdateKeys.paymentStatus:
-                val.bookingDetail!.isAdvancePaymentDone
-                    ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-                    : val.bookingDetail!.paymentStatus.validate(),
+            BookingUpdateKeys.durationDiff: val.bookingDetail!.durationDiff.toInt(),
+            BookingUpdateKeys.paymentStatus: val.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : val.bookingDetail!.paymentStatus.validate(),
           };
 
     if (chargesList.isNotEmpty && isAddExtraCharges) {
@@ -501,19 +334,129 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     appStore.setLoading(false);
   }
 
+  Future<void> _createCustomMarkerIcon() async {
+    final ImageConfiguration imageConfiguration = ImageConfiguration(size: Size(24, 24));
+    // ignore: deprecated_member_use
+    customIcon = await BitmapDescriptor.fromAssetImage(
+      imageConfiguration,
+      indicator_2,
+    );
+  }
+
+  Future<void> _getCurrentLocation({required bool isFirstTime}) async {
+    await getHandymanLocation(widget.bookingId).then((value) {
+      handymanLocation = value;
+      setState(() {});
+      if (value != null && value.data.latitude != null && value.data.longitude != null) {
+        setState(() {
+          if (isFirstTime) {
+            locationTime = DateTime.parse(value.data.datetime.toString()).timeAgo;
+          }
+          _currentPosition = LatLng(
+            double.parse(value.data.latitude.toString()),
+            double.parse(value.data.longitude.toString()),
+          );
+          if (mapController != null) {
+            mapController!.animateCamera(CameraUpdate.newCameraPosition(
+              CameraPosition(
+                target: _currentPosition!,
+                zoom: 15.0,
+              ),
+            ));
+          }
+        });
+      } else {
+        _currentPosition = LatLng(0, 0);
+      }
+    });
+  }
+
+  void startLocationUpdates({required String status, required int handymanID, bool isFirstTimeLoad = false}) async {
+    if (bookingStatus == BookingStatusKeys.onGoing) {
+      bool isPermenetlyDenied = await PermissionHandlerPlatform.instance.checkPermissionStatus(Permission.locationAlways) == PermissionStatus.permanentlyDenied ||
+          await PermissionHandlerPlatform.instance.checkPermissionStatus(Permission.location) == PermissionStatus.permanentlyDenied ||
+          await PermissionHandlerPlatform.instance.checkPermissionStatus(Permission.locationWhenInUse) == PermissionStatus.permanentlyDenied;
+      if (isPermenetlyDenied && isUserTypeProvider && handymanID != appStore.userId) {
+        stopLocationUpdates();
+        showConfirmDialogCustom(
+          context,
+          title: languages.youHavePermanentlyDenied,
+          primaryColor: primaryColor,
+          positiveText: languages.lblYes,
+          negativeText: languages.lblNo,
+          onAccept: (context) async {
+            openAppSettings();
+          },
+        );
+      } else if (await Permissions.locationPermissionsGranted()) {
+        if (isFirstTimeLoad) {
+          await refreshProviderAndHandymanLocation(status: status, handymanID: handymanID);
+        }
+        if (_locationUpdateTimer == null || !_locationUpdateTimer!.isActive) {
+          _locationUpdateTimer = Timer.periodic(
+            Duration(seconds: providerLocationRefreshPeriodInSeconds),
+            (Timer timer) async {
+              refreshProviderAndHandymanLocation(status: status, handymanID: handymanID);
+            },
+          );
+        }
+      }
+    } else {
+      stopLocationUpdates();
+    }
+  }
+
+  refreshProviderAndHandymanLocation({required String status, required int handymanID}) async {
+    if (status == BookingStatusKeys.onGoing && isUserTypeHandyman) {
+      await setLocation();
+    } else if (status == BookingStatusKeys.onGoing && isUserTypeProvider) {
+      if (handymanID == appStore.userId) {
+        await setLocation();
+      } else if (handymanID != appStore.userId && handymanID != -1) {
+        await _getCurrentLocation(isFirstTime: true);
+      } else {
+        stopLocationUpdates();
+      }
+    } else {
+      stopLocationUpdates();
+    }
+  }
+
+  shareComponent() {
+    String url = 'https://www.google.com/maps/search/?api=1&query=${handymanLocation?.data.latitude},${handymanLocation?.data.longitude}';
+    share(url: url, context: context);
+  }
+
+  void stopLocationUpdates() {
+    _locationUpdateTimer?.cancel();
+    locationTimers?.cancel();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      stopLocationUpdates();
+    } else if (state == AppLifecycleState.resumed) {
+      startLocationUpdates(status: bookingStatus, handymanID: handymanId);
+    }
+  }
+
+  BookingDetailResponse? initialData() {
+    if (cachedBookingDetailList.any((element) => element.bookingDetail!.id == widget.bookingId.validate())) {
+      return cachedBookingDetailList.firstWhere((element) => element.bookingDetail!.id == widget.bookingId);
+    }
+    return null;
+  }
   //endregion
 
   //region Components
-  Widget _serviceDetailWidget(
-      {required BookingData bookingDetail,
-      required ServiceData serviceDetail}) {
+  Widget _serviceDetailWidget({required BookingData bookingDetail, required ServiceData serviceDetail}) {
     return GestureDetector(
       onTap: () {
         if (bookingDetail.isPostJob || bookingDetail.isPackageBooking) {
           //
         } else {
-          ServiceDetailScreen(serviceId: bookingDetail.serviceId.validate())
-              .launch(context);
+          ServiceDetailScreen(serviceId: bookingDetail.serviceId.validate()).launch(context);
         }
       },
       child: Row(
@@ -543,8 +486,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                   children: [
                     Text("${languages.lblDate}: ", style: secondaryTextStyle()),
                     Text(
-                      formatDate(bookingDetail.date.validate(),
-                          format: DATE_FORMAT_2),
+                      formatDate(bookingDetail.date.validate(), format: DATE_FORMAT_2),
                       style: boldTextStyle(size: 12),
                     ),
                   ],
@@ -559,12 +501,9 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                 ),
             ],
           ).expand(),
-          if (serviceDetail.attchments!.isNotEmpty &&
-              !bookingDetail.isPackageBooking)
+          if (serviceDetail.attchments!.isNotEmpty && !bookingDetail.isPackageBooking)
             CachedImageWidget(
-              url: serviceDetail.attchments!.isNotEmpty
-                  ? serviceDetail.attchments!.first.url.validate()
-                  : "",
+              url: serviceDetail.attchments!.isNotEmpty ? serviceDetail.attchments!.first.url.validate() : "",
               height: 90,
               width: 90,
               fit: BoxFit.cover,
@@ -573,18 +512,9 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
           else
             CachedImageWidget(
               url: bookingDetail.bookingPackage != null
-                  ? bookingDetail.bookingPackage!.imageAttachments
-                          .validate()
-                          .isNotEmpty
-                      ? bookingDetail.bookingPackage!.imageAttachments
-                              .validate()
-                              .first
-                              .validate()
-                              .isNotEmpty
-                          ? bookingDetail.bookingPackage!.imageAttachments
-                              .validate()
-                              .first
-                              .validate()
+                  ? bookingDetail.bookingPackage!.imageAttachments.validate().isNotEmpty
+                      ? bookingDetail.bookingPackage!.imageAttachments.validate().first.validate().isNotEmpty
+                          ? bookingDetail.bookingPackage!.imageAttachments.validate().first.validate()
                           : ''
                       : ''
                   : '',
@@ -600,23 +530,15 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
 
   Widget _buildCounterWidget({required BookingDetailResponse value}) {
     if (value.bookingDetail!.isHourlyService &&
-        (value.bookingDetail!.status == BookingStatusKeys.inProgress ||
-            value.bookingDetail!.status == BookingStatusKeys.hold ||
-            value.bookingDetail!.status == BookingStatusKeys.complete ||
-            value.bookingDetail!.status == BookingStatusKeys.onGoing))
-      return CountdownWidget(bookingDetailResponse: value, key: countDownKey)
-          .paddingSymmetric(horizontal: 16);
+        (value.bookingDetail!.status == BookingStatusKeys.inProgress || value.bookingDetail!.status == BookingStatusKeys.hold || value.bookingDetail!.status == BookingStatusKeys.complete || value.bookingDetail!.status == BookingStatusKeys.onGoing))
+      return CountdownWidget(bookingDetailResponse: value, key: countDownKey).paddingSymmetric(horizontal: 16);
     else
       return Offstage();
   }
 
   Widget _buildReasonWidget({required BookingDetailResponse snap}) {
-    if ((snap.bookingDetail!.status == BookingStatusKeys.hold ||
-            snap.bookingDetail!.status == BookingStatusKeys.cancelled ||
-            snap.bookingDetail!.status == BookingStatusKeys.rejected ||
-            snap.bookingDetail!.status == BookingStatusKeys.failed) &&
-        ((snap.bookingDetail!.reason != null &&
-            snap.bookingDetail!.reason!.isNotEmpty)))
+    if ((snap.bookingDetail!.status == BookingStatusKeys.hold || snap.bookingDetail!.status == BookingStatusKeys.cancelled || snap.bookingDetail!.status == BookingStatusKeys.rejected || snap.bookingDetail!.status == BookingStatusKeys.failed) &&
+        ((snap.bookingDetail!.reason != null && snap.bookingDetail!.reason!.isNotEmpty)))
       return Container(
         padding: EdgeInsets.all(16),
         color: redColor.withOpacity(0.05),
@@ -625,8 +547,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(languages.lblReason, style: secondaryTextStyle()),
-            Text(snap.bookingDetail!.reason.validate(),
-                style: primaryTextStyle(color: redColor)),
+            Text(snap.bookingDetail!.reason.validate(), style: primaryTextStyle(color: redColor)),
           ],
         ),
       );
@@ -634,19 +555,16 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     return Offstage();
   }
 
-  Widget _customerReviewWidget(
-      {required BookingDetailResponse bookingDetailResponse}) {
+  Widget _customerReviewWidget({required BookingDetailResponse bookingDetailResponse}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (bookingDetailResponse.ratingData!.isNotEmpty)
           ViewAllLabel(
-            label:
-                '${languages.review} (${bookingDetailResponse.bookingDetail!.totalReview})',
+            label: '${languages.review} (${bookingDetailResponse.bookingDetail!.totalReview})',
             list: bookingDetailResponse.ratingData!,
             onTap: () {
-              RatingViewAllScreen(serviceId: bookingDetailResponse.service!.id!)
-                  .launch(context);
+              RatingViewAllScreen(serviceId: bookingDetailResponse.service!.id!).launch(context);
             },
           ),
         8.height,
@@ -656,22 +574,15 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
           physics: NeverScrollableScrollPhysics(),
         ),
       ],
-    )
-        .paddingSymmetric(horizontal: 16)
-        .visible(bookingDetailResponse.service!.totalRating != null);
+    ).paddingSymmetric(horizontal: 16).visible(bookingDetailResponse.service!.totalRating != null);
   }
 
   Widget buildTimeWidget({required BookingData bookingDetail}) {
     if (bookingDetail.bookingSlot == null) {
-      return Text(formatDate(bookingDetail.date.validate(), isTime: true),
-          style: boldTextStyle(size: 12));
+      return Text(formatDate(bookingDetail.date.validate(), isTime: true), style: boldTextStyle(size: 12));
     }
     return Text(
-      formatDate(
-          getSlotWithDate(
-              date: bookingDetail.date.validate(),
-              slotTime: bookingDetail.bookingSlot.validate()),
-          isTime: true),
+      formatDate(getSlotWithDate(date: bookingDetail.date.validate(), slotTime: bookingDetail.bookingSlot.validate()), isTime: true),
       style: boldTextStyle(size: 12),
     );
   }
@@ -689,8 +600,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
         4.height,
         Row(
           children: [
-            Text("${languages.lastUpdatedAt} ",
-                style: secondaryTextStyle(size: 10)),
+            Text("${languages.lastUpdatedAt} ", style: secondaryTextStyle(size: 10)),
             Text(
               "${DateTime.parse(handymanLocation?.data.datetime.toString() ?? DateTime.now().toString()).timeAgo}",
               style: primaryTextStyle(size: 10),
@@ -708,16 +618,11 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                 mapType: MapType.normal,
                 minMaxZoomPreference: MinMaxZoomPreference(1, 40),
                 gestureRecognizers: Set()
-                  ..add(Factory<OneSequenceGestureRecognizer>(
-                      () => new EagerGestureRecognizer()))
-                  ..add(Factory<PanGestureRecognizer>(
-                      () => PanGestureRecognizer()))
-                  ..add(Factory<ScaleGestureRecognizer>(
-                      () => ScaleGestureRecognizer()))
-                  ..add(Factory<TapGestureRecognizer>(
-                      () => TapGestureRecognizer()))
-                  ..add(Factory<VerticalDragGestureRecognizer>(
-                      () => VerticalDragGestureRecognizer())),
+                  ..add(Factory<OneSequenceGestureRecognizer>(() => new EagerGestureRecognizer()))
+                  ..add(Factory<PanGestureRecognizer>(() => PanGestureRecognizer()))
+                  ..add(Factory<ScaleGestureRecognizer>(() => ScaleGestureRecognizer()))
+                  ..add(Factory<TapGestureRecognizer>(() => TapGestureRecognizer()))
+                  ..add(Factory<VerticalDragGestureRecognizer>(() => VerticalDragGestureRecognizer())),
                 onMapCreated: (GoogleMapController controller) {
                   print("Map created");
                   mapController = controller;
@@ -740,68 +645,66 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
               Positioned(
                 left: 10,
                 top: 10,
-                child: CupertinoActivityIndicator(color: black)
-                      .visible(isLocationLoader),
+                child: CupertinoActivityIndicator(color: black).visible(isLocationLoader),
               ),
             ],
           ),
         ),
-        
-          10.height,
-           Row(
-                  children: [
-                    AppButton(
-                      onTap: () {
-                        TrackLocation(
-                          bookingId: widget.bookingId,
-                        ).launch(context);
-                      },
-                      padding: EdgeInsets.only(top: 0, left: 8, right: 8),
-                      height: 42,
-                      color: Color(0xFF39A81D),
-                      textColor: white,
-                      text: languages.track,
-                    ).expand(),
-                    16.width,
-                    Container(
-                      width: 42,
-                      height: 42,
-                      padding: EdgeInsets.all(12),
-                      decoration: boxDecorationDefault(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
-                      ),
-                      child: CachedImageWidget(
-                        url: ic_refresh,
-                        color: textSecondaryColor,
-                        height: 42,
-                      ),
-                    ).onTap(() {
-                      setLocationfun(data: data);
-                    }),
-                    16.width,
-                    Container(
-                      width: 42,
-                      height: 42,
-                      padding: EdgeInsets.all(12),
-                      decoration: boxDecorationDefault(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(
-                          Radius.circular(6),
-                        ),
-                      ),
-                      child: CachedImageWidget(
-                        url: ic_share,
-                        color: textSecondaryColor,
-                        height: 42,
-                      ),
-                    ).onTap(
-                      () {
-                        shareComponent();
-                      },
-                    ),
-                  ],
+        10.height,
+        Row(
+          children: [
+            AppButton(
+              onTap: () {
+                TrackLocation(
+                  bookingId: widget.bookingId,
+                ).launch(context);
+              },
+              padding: EdgeInsets.only(top: 0, left: 8, right: 8),
+              height: 42,
+              color: Color(0xFF39A81D),
+              textColor: white,
+              text: languages.track,
+            ).expand(),
+            16.width,
+            Container(
+              width: 42,
+              height: 42,
+              padding: EdgeInsets.all(12),
+              decoration: boxDecorationDefault(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(Radius.circular(6)),
+              ),
+              child: CachedImageWidget(
+                url: ic_refresh,
+                color: textSecondaryColor,
+                height: 42,
+              ),
+            ).onTap(() {
+              startLocationUpdates(status: data?.bookingDetail?.status.validate() ?? "", handymanID: data?.handymanData?.first.id.validate() ?? -1);
+            }),
+            16.width,
+            Container(
+              width: 42,
+              height: 42,
+              padding: EdgeInsets.all(12),
+              decoration: boxDecorationDefault(
+                color: Colors.white,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(6),
                 ),
+              ),
+              child: CachedImageWidget(
+                url: ic_share,
+                color: textSecondaryColor,
+                height: 42,
+              ),
+            ).onTap(
+              () {
+                shareComponent();
+              },
+            ),
+          ],
+        ),
       ],
     ).paddingSymmetric(horizontal: 16, vertical: 16);
   }
@@ -814,9 +717,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             8.height,
-            Text(
-                "${languages.lblBooking.split('s').join(' ')}${languages.hintDescription}",
-                style: boldTextStyle(size: LABEL_TEXT_SIZE)),
+            Text("${languages.lblBooking.split('s').join(' ')}${languages.hintDescription}", style: boldTextStyle(size: LABEL_TEXT_SIZE)),
             8.height,
             ReadMoreText(
               value.bookingDetail!.description.validate(),
@@ -836,8 +737,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         24.height,
-        Text(languages.lblMyService,
-            style: boldTextStyle(size: LABEL_TEXT_SIZE)),
+        Text(languages.lblMyService, style: boldTextStyle(size: LABEL_TEXT_SIZE)),
         8.height,
         AnimatedListView(
           itemCount: serviceList.length,
@@ -850,27 +750,18 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
               width: context.width(),
               margin: EdgeInsets.symmetric(vertical: 8),
               padding: EdgeInsets.all(8),
-              decoration: boxDecorationWithRoundedCorners(
-                  backgroundColor: context.cardColor,
-                  borderRadius:
-                      BorderRadius.all(Radius.circular(defaultRadius))),
+              decoration: boxDecorationWithRoundedCorners(backgroundColor: context.cardColor, borderRadius: BorderRadius.all(Radius.circular(defaultRadius))),
               child: Row(
                 children: [
                   CachedImageWidget(
-                    url: data.imageAttachments.validate().isNotEmpty
-                        ? data.imageAttachments!.first.validate()
-                        : "",
+                    url: data.imageAttachments.validate().isNotEmpty ? data.imageAttachments!.first.validate() : "",
                     fit: BoxFit.cover,
                     height: 50,
                     width: 50,
                     radius: defaultRadius,
                   ),
                   16.width,
-                  Text(data.name.validate(),
-                          style: primaryTextStyle(),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis)
-                      .expand(),
+                  Text(data.name.validate(), style: primaryTextStyle(), maxLines: 2, overflow: TextOverflow.ellipsis).expand(),
                 ],
               ),
             );
@@ -884,8 +775,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(languages.includedInThisPackage, style: boldTextStyle())
-            .paddingSymmetric(horizontal: 16, vertical: 8),
+        Text(languages.includedInThisPackage, style: boldTextStyle()).paddingSymmetric(horizontal: 16, vertical: 8),
         AnimatedListView(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
@@ -902,17 +792,13 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
               decoration: boxDecorationWithRoundedCorners(
                 borderRadius: radius(),
                 backgroundColor: context.cardColor,
-                border: appStore.isDarkMode
-                    ? Border.all(color: context.dividerColor)
-                    : null,
+                border: appStore.isDarkMode ? Border.all(color: context.dividerColor) : null,
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CachedImageWidget(
-                    url: data.imageAttachments!.isNotEmpty
-                        ? data.imageAttachments!.first.validate()
-                        : "",
+                    url: data.imageAttachments!.isNotEmpty ? data.imageAttachments!.first.validate() : "",
                     height: 70,
                     width: 70,
                     fit: BoxFit.cover,
@@ -922,28 +808,20 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(data.name.validate(),
-                          style: boldTextStyle(size: LABEL_TEXT_SIZE)),
+                      Text(data.name.validate(), style: boldTextStyle(size: LABEL_TEXT_SIZE)),
                       4.height,
                       if (data.subCategoryName.validate().isNotEmpty)
                         Marquee(
                           child: Row(
                             children: [
-                              Text('${data.categoryName}',
-                                  style: boldTextStyle(
-                                      color: textSecondaryColorGlobal)),
-                              Text('  >  ',
-                                  style: boldTextStyle(
-                                      color: textSecondaryColorGlobal)),
-                              Text('${data.subCategoryName}',
-                                  style: boldTextStyle(
-                                      color: context.primaryColor)),
+                              Text('${data.categoryName}', style: boldTextStyle(size: 12, color: textSecondaryColorGlobal)),
+                              Text('  >  ', style: boldTextStyle(size: 14, color: textSecondaryColorGlobal)),
+                              Text('${data.subCategoryName}', style: boldTextStyle(size: 12, color: context.primaryColor)),
                             ],
                           ),
                         )
                       else
-                        Text('${data.categoryName}',
-                            style: secondaryTextStyle()),
+                        Text('${data.categoryName}', style: boldTextStyle(size: 12, color: context.primaryColor)),
                       4.height,
                       PriceWidget(
                         price: data.price.validate(),
@@ -1021,10 +899,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                     var request = {
                       CommonKeys.id: res.bookingDetail!.id.validate(),
                       BookingUpdateKeys.status: BookingStatusKeys.accept,
-                      BookingUpdateKeys.paymentStatus:
-                          res.bookingDetail!.isAdvancePaymentDone
-                              ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID
-                              : res.bookingDetail!.paymentStatus.validate(),
+                      BookingUpdateKeys.paymentStatus: res.bookingDetail!.isAdvancePaymentDone ? SERVICE_PAYMENT_STATUS_ADVANCE_PAID : res.bookingDetail!.paymentStatus.validate(),
                     };
                     appStore.setLoading(true);
 
@@ -1044,8 +919,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
             text: languages.decline,
             textColor: textPrimaryColorGlobal,
             onTap: () {
-              confirmationRequestDialog(
-                  context, BookingStatusKeys.rejected, res);
+              confirmationRequestDialog(context, BookingStatusKeys.rejected, res);
             },
           ).expand(),
         ],
@@ -1058,15 +932,11 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
           text: languages.lblAssignHandyman,
           color: context.primaryColor,
           onTap: () {
-            assignBookingDialog(context, res.bookingDetail!.id,
-                res.bookingDetail!.bookingAddressId);
+            assignBookingDialog(context, res.bookingDetail!.id, res.bookingDetail!.bookingAddressId);
           },
         );
       } else {
-        return Text(
-                '${res.handymanData!.first.displayName.validate()} ${languages.lblAssigned}',
-                style: boldTextStyle())
-            .center();
+        return Text('${res.handymanData!.first.displayName.validate()} ${languages.lblAssigned}', style: boldTextStyle()).center();
       }
     }
 
@@ -1081,9 +951,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
         child: Row(
           children: [
             AppButton(
-              text: res.service!.isOnlineService.validate()
-                  ? languages.start
-                  : languages.lblStartDrive,
+              text: res.service!.isOnlineService.validate() ? languages.start : languages.lblStartDrive,
               color: startDriveButtonColor,
               onTap: () {
                 showConfirmDialogCustom(
@@ -1097,12 +965,9 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                     await updateBooking(
                       res,
                       '',
-                      res.service!.isOnlineService.validate()
-                          ? BookingStatusKeys.inProgress
-                          : BookingStatusKeys.onGoing,
+                      res.service!.isOnlineService.validate() ? BookingStatusKeys.inProgress : BookingStatusKeys.onGoing,
                     );
-                    Permissions.locationPermissionsGranted();
-                    await setLocation(widget.bookingId.toString());
+                    startLocationUpdates(status: res.bookingDetail?.status.validate() ?? "", handymanID: res.handymanData?.first.id.validate() ?? -1);
                   },
                 );
               },
@@ -1138,10 +1003,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
               textStyle: boldTextStyle(color: white),
               color: context.primaryColor,
               onTap: () {
-                bool isAnyServiceAddonUnCompleted = res
-                    .bookingDetail!.serviceaddon
-                    .validate()
-                    .any((element) => element.status.getBoolInt() == false);
+                bool isAnyServiceAddonUnCompleted = res.bookingDetail!.serviceaddon.validate().any((element) => element.status.getBoolInt() == false);
                 showConfirmDialogCustom(
                   context,
                   onAccept: (_) {
@@ -1150,15 +1012,12 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                   primaryColor: context.primaryColor,
                   positiveText: languages.lblYes,
                   negativeText: languages.lblNo,
-                  subTitle: isAnyServiceAddonUnCompleted
-                      ? languages.pleaseNoteThatAllServiceMarkedCompleted
-                      : null,
+                  subTitle: isAnyServiceAddonUnCompleted ? languages.pleaseNoteThatAllServiceMarkedCompleted : null,
                   title: languages.confirmationRequestTxt,
                 );
               },
             ).expand(),
-            if (!res.bookingDetail!.isFreeService &&
-                res.bookingDetail!.bookingPackage == null)
+            if (!res.bookingDetail!.isFreeService && res.bookingDetail!.bookingPackage == null)
               AppButton(
                 margin: EdgeInsets.only(left: 16),
                 child: Text(
@@ -1181,11 +1040,9 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     } else if (res.bookingDetail!.status == BookingStatusKeys.onGoing) {
       showBottomActionBar = true;
 
-      return Text(languages.lblWaitingForResponse, style: boldTextStyle())
-          .center();
+      return Text(languages.lblWaitingForResponse, style: boldTextStyle()).center();
     } else if (res.bookingDetail!.status == BookingStatusKeys.complete) {
-      if (res.bookingDetail!.paymentMethod == PAYMENT_METHOD_COD &&
-          res.bookingDetail!.paymentStatus == PENDING) {
+      if (res.bookingDetail!.paymentMethod == PAYMENT_METHOD_COD && res.bookingDetail!.paymentStatus == PENDING) {
         showBottomActionBar = true;
         return AppButton(
           text: languages.lblConfirmPayment,
@@ -1194,16 +1051,13 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
             confirmationRequestDialog(context, BookingStatusKeys.complete, res);
           },
         );
-      } else if (res.bookingDetail!.paymentStatus == PAID ||
-          res.bookingDetail!.paymentStatus == PENDING_BY_ADMINS) {
+      } else if (res.bookingDetail!.paymentStatus == PAID || res.bookingDetail!.paymentStatus == PENDING_BY_ADMINS) {
         showBottomActionBar = true;
         return AppButton(
           text: languages.lblServiceProof,
           color: context.primaryColor,
           onTap: () {
-            ServiceProofScreen(bookingDetail: res)
-                .launch(context, pageRouteAnimation: PageRouteAnimation.Fade)
-                .then((value) {
+            ServiceProofScreen(bookingDetail: res).launch(context, pageRouteAnimation: PageRouteAnimation.Fade).then((value) {
               init(flag: true);
             });
           },
@@ -1212,16 +1066,12 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
     } else if (res.bookingDetail!.status == BookingStatusKeys.inProgress) {
       showBottomActionBar = true;
 
-      return Text(res.bookingDetail!.statusLabel.validate(),
-              style: boldTextStyle())
-          .center();
+      return Text(res.bookingDetail!.statusLabel.validate(), style: boldTextStyle()).center();
     }
     return Offstage();
   }
 
-  Widget extraChargesWidget(
-      {required List<ExtraChargesModel> extraChargesList,
-      required BookingDetailResponse res}) {
+  Widget extraChargesWidget({required List<ExtraChargesModel> extraChargesList, required BookingDetailResponse res}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1229,19 +1079,15 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(languages.lblExtraCharges,
-                style: boldTextStyle(size: LABEL_TEXT_SIZE)),
+            Text(languages.lblExtraCharges, style: boldTextStyle(size: LABEL_TEXT_SIZE)),
             IconButton(
-              style:
-                  ButtonStyle(padding: WidgetStatePropertyAll(EdgeInsets.zero)),
+              style: ButtonStyle(padding: WidgetStatePropertyAll(EdgeInsets.zero)),
               icon: ic_edit_square.iconImage(size: 18),
               visualDensity: VisualDensity.compact,
               onPressed: () async {
                 chargesList.clear();
                 chargesList.addAll(extraChargesList);
-                bool? a =
-                    await AddExtraChargesScreen(isFromEditExtraCharge: true)
-                        .launch(context);
+                bool? a = await AddExtraChargesScreen(isFromEditExtraCharge: true).launch(context);
 
                 if (a ?? false) {
                   _handlePendingApproval(val: res, isEditExtraCharges: true);
@@ -1252,8 +1098,7 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
         ).visible(res.bookingDetail!.paymentStatus != PAID),
         16.height,
         Container(
-          decoration: boxDecorationWithRoundedCorners(
-              backgroundColor: context.cardColor, borderRadius: radius()),
+          decoration: boxDecorationWithRoundedCorners(backgroundColor: context.cardColor, borderRadius: radius()),
           padding: EdgeInsets.all(16),
           child: AnimatedListView(
             itemCount: extraChargesList.length,
@@ -1270,22 +1115,13 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                 children: [
                   Row(
                     children: [
-                      Text(data.title.validate(),
-                              style: secondaryTextStyle(size: 14))
-                          .expand(),
+                      Text(data.title.validate(), style: secondaryTextStyle(size: 14)).expand(),
                       16.width,
                       Row(
                         children: [
-                          Text('${data.qty} * ${data.price.validate()} = ',
-                              style: secondaryTextStyle()),
+                          Text('${data.qty} * ${data.price.validate()} = ', style: secondaryTextStyle()),
                           4.width,
-                          PriceWidget(
-                              price:
-                                  '${data.price.validate() * data.qty.validate()}'
-                                      .toDouble(),
-                              size: 16,
-                              color: textPrimaryColorGlobal,
-                              isBoldText: true),
+                          PriceWidget(price: '${data.price.validate() * data.qty.validate()}'.toDouble(), size: 16, color: textPrimaryColorGlobal, isBoldText: true),
                         ],
                       ),
                     ],
@@ -1343,27 +1179,15 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                         children: [
                           Text(
                             languages.lblBookingID,
-                            style: boldTextStyle(
-                                size: LABEL_TEXT_SIZE,
-                                color: appStore.isDarkMode
-                                    ? white
-                                    : gray.withOpacity(0.8)),
+                            style: boldTextStyle(size: LABEL_TEXT_SIZE, color: appStore.isDarkMode ? white : gray.withOpacity(0.8)),
                           ),
-                          Text(
-                              '#' +
-                                  res.data!.bookingDetail!.id
-                                      .toString()
-                                      .validate(),
-                              style:
-                                  boldTextStyle(color: primaryColor, size: 16)),
+                          Text('#' + res.data!.bookingDetail!.id.toString().validate(), style: boldTextStyle(color: primaryColor, size: 16)),
                         ],
                       ),
                       16.height,
                       Divider(height: 0, color: context.dividerColor),
                       12.height,
-                      _serviceDetailWidget(
-                          serviceDetail: res.data!.service!,
-                          bookingDetail: res.data!.bookingDetail!)
+                      _serviceDetailWidget(serviceDetail: res.data!.service!, bookingDetail: res.data!.bookingDetail!)
                     ],
                   ).paddingAll(16),
 
@@ -1374,82 +1198,66 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                   _buildCounterWidget(value: res.data!),
 
                   /// Location Tracking
-                  locationTrackWidget(data: res.data).visible(
-                      BookingStatusKeys.onGoing ==
-                              res.data!.bookingDetail!.status &&
-                          !isUserTypeHandyman &&
-                          res.data!.handymanData![0].id != appStore.userId),
+                  locationTrackWidget(data: res.data).visible(BookingStatusKeys.onGoing == res.data!.bookingDetail!.status && !isUserTypeHandyman && res.data!.handymanData![0].id != appStore.userId),
 
                   ///Description Widget
                   descriptionWidget(value: res.data!),
 
                   /// My Service List
-                  if (res.data!.postRequestDetail != null &&
-                      res.data!.postRequestDetail!.service != null)
-                    myServiceList(
-                        serviceList: res.data!.postRequestDetail!.service!),
+                  if (res.data!.postRequestDetail != null && res.data!.postRequestDetail!.service != null) myServiceList(serviceList: res.data!.postRequestDetail!.service!),
 
                   /// Package Info if User selected any Package
-                  if (res.data!.bookingDetail!.bookingPackage != null)
-                    packageWidget(
-                        package: res.data!.bookingDetail!.bookingPackage!),
+                  if (res.data!.bookingDetail!.bookingPackage != null) packageWidget(package: res.data!.bookingDetail!.bookingPackage!),
 
                   /// Service Proof Images
-                  ServiceProofListWidget(
-                      serviceProofList: res.data!.serviceProof!),
+                  ServiceProofListWidget(serviceProofList: res.data!.serviceProof!),
 
-               /// Last Updated
-                  if (BookingStatusKeys.onGoing ==
-                          res.data!.bookingDetail!.status &&
-                      res.data!.handymanData![0].id == appStore.userId)
-                    16.height,
-                    if (BookingStatusKeys.onGoing ==
-                          res.data!.bookingDetail!.status &&
-                      res.data!.handymanData![0].id == appStore.userId)
-                  Container(
-                    width: context.width(),
-                    decoration: boxDecorationWithRoundedCorners(
-                      backgroundColor: context.cardColor,
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                    ),
-                    padding: EdgeInsets.only(top: 4, left:4, right:4, bottom: 4),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            12.height,
-                            Text.rich(
+                  /// Last Updated
+                  if (BookingStatusKeys.onGoing == res.data!.bookingDetail!.status && res.data!.handymanData![0].id == appStore.userId) 16.height,
+                  if (BookingStatusKeys.onGoing == res.data!.bookingDetail!.status && res.data!.handymanData![0].id == appStore.userId)
+                    Container(
+                      width: context.width(),
+                      decoration: boxDecorationWithRoundedCorners(
+                        backgroundColor: context.cardColor,
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                      padding: EdgeInsets.only(top: 4, left: 4, right: 4, bottom: 4),
+                      child: Row(
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              12.height,
+                              Text.rich(
                                 TextSpan(
                                   children: [
                                     TextSpan(text: languages.lastUpdatedAt, style: secondaryTextStyle(size: 12)),
-                                    TextSpan(text:" ${DateTime.parse(handymanLocation?.data.datetime.toString() ?? DateTime.now().toString()).timeAgo}", style: secondaryTextStyle(size: 12)),
+                                    TextSpan(text: " ${DateTime.parse(handymanLocation?.data.datetime.toString() ?? DateTime.now().toString()).timeAgo}", style: secondaryTextStyle(size: 12)),
                                   ],
                                 ),
                               ).paddingOnly(left: 16),
-                            TextButton(
-                              iconAlignment: IconAlignment.start,
-                              child: Text(languages.updateYourLocation, style: boldTextStyle(size: 12, color: primaryColor)),
-                              onPressed: ()async {
-                                  await setLocation(widget.bookingId.toString());
-                              },
-                              isSemanticButton: false,
-                            ).paddingLeft(3),
-                          ],
-                        ).expand(),
-                        CachedImageWidget(url: img_location, height: 80)
-                      ],
-                    ),
-                  ).paddingOnly(left: 16, right: 16),
+                              TextButton(
+                                iconAlignment: IconAlignment.start,
+                                child: Text(languages.updateYourLocation, style: boldTextStyle(size: 12, color: primaryColor)),
+                                onPressed: () {
+                                  startLocationUpdates(status: res.data?.bookingDetail?.status.validate() ?? "", handymanID: res.data?.handymanData?.first.id.validate() ?? -1);
+                                },
+                                isSemanticButton: false,
+                              ).paddingLeft(3),
+                            ],
+                          ).expand(),
+                          CachedImageWidget(url: img_location, height: 80)
+                        ],
+                      ),
+                    ).paddingOnly(left: 16, right: 16),
+
                   /// About Handyman Card
-                  if (res.data!.handymanData!.isNotEmpty &&
-                      appStore.userType != USER_TYPE_HANDYMAN)
+                  if (res.data!.handymanData!.isNotEmpty && appStore.userType != USER_TYPE_HANDYMAN)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         24.height,
-                        Text(languages.lblAboutHandyman,
-                            style: boldTextStyle(size: LABEL_TEXT_SIZE)),
+                        Text(languages.lblAboutHandyman, style: boldTextStyle(size: LABEL_TEXT_SIZE)),
                         16.height,
                         Container(
                           decoration: boxDecorationWithRoundedCorners(
@@ -1467,13 +1275,8 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                                   bookingDetail: res.data!.bookingDetail!,
                                   bookingInfo: res.data!,
                                 ).paddingOnly(bottom: 24).onTap(() {
-                                  if (res.data!.bookingDetail!
-                                      .canCustomerContact) {
-                                    HandymanInfoScreen(
-                                            handymanId: e.id,
-                                            service: res.data!.service)
-                                        .launch(context)
-                                        .then((value) => null);
+                                  if (res.data!.bookingDetail!.canCustomerContact) {
+                                    HandymanInfoScreen(handymanId: e.id, service: res.data!.service).launch(context).then((value) => null);
                                   }
                                 });
                               },
@@ -1488,16 +1291,10 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       16.height,
-                      // if(res.data!.bookingDetail!.canCustomerContact)
-                      aboutCustomerWidget(
-                          context: context,
-                          bookingDetail: res.data!.bookingDetail),
+                      aboutCustomerWidget(context: context, bookingDetail: res.data!.bookingDetail),
                       16.height,
                       Container(
-                        decoration: boxDecorationWithRoundedCorners(
-                            backgroundColor: context.cardColor,
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(16))),
+                        decoration: boxDecorationWithRoundedCorners(backgroundColor: context.cardColor, borderRadius: BorderRadius.all(Radius.circular(16))),
                         padding: EdgeInsets.all(16),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1515,47 +1312,28 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                       8.height,
 
                       ///Add-ons
-                      if (res.data!.bookingDetail!.serviceaddon
-                          .validate()
-                          .isNotEmpty)
+                      if (res.data!.bookingDetail!.serviceaddon.validate().isNotEmpty)
                         AddonComponent(
-                          serviceAddon:
-                              res.data!.bookingDetail!.serviceaddon.validate(),
+                          serviceAddon: res.data!.bookingDetail!.serviceaddon.validate(),
                         ),
                     ],
                   ).paddingOnly(left: 16, right: 16, bottom: 16),
 
                   /// Price Detail Card
-                  if (res.data!.bookingDetail != null &&
-                      !res.data!.bookingDetail!.isFreeService)
+                  if (res.data!.bookingDetail != null && !res.data!.bookingDetail!.isFreeService)
                     PriceCommonWidget(
                       bookingDetail: res.data!.bookingDetail!,
                       serviceDetail: res.data!.service!,
                       taxes: res.data!.bookingDetail!.taxes.validate(),
-                      couponData: res.data!.couponData != null
-                          ? res.data!.couponData!
-                          : null,
-                      bookingPackage:
-                          res.data!.bookingDetail!.bookingPackage != null
-                              ? res.data!.bookingDetail!.bookingPackage
-                              : null,
+                      couponData: res.data!.couponData != null ? res.data!.couponData! : null,
+                      bookingPackage: res.data!.bookingDetail!.bookingPackage != null ? res.data!.bookingDetail!.bookingPackage : null,
                     ).paddingOnly(bottom: 16, left: 16, right: 16),
 
                   /// Extra Charges
-                  if (res.data!.bookingDetail!.extraCharges
-                      .validate()
-                      .isNotEmpty)
-                    extraChargesWidget(
-                            extraChargesList: res
-                                .data!.bookingDetail!.extraCharges
-                                .validate(),
-                            res: res.data!)
-                        .paddingOnly(left: 16, right: 16, bottom: 16),
+                  if (res.data!.bookingDetail!.extraCharges.validate().isNotEmpty) extraChargesWidget(extraChargesList: res.data!.bookingDetail!.extraCharges.validate(), res: res.data!).paddingOnly(left: 16, right: 16, bottom: 16),
 
                   /// Payment Detail Card
-                  if (res.data!.bookingDetail!.paymentId != null &&
-                      res.data!.bookingDetail!.paymentStatus != null &&
-                      !res.data!.bookingDetail!.isFreeService)
+                  if (res.data!.bookingDetail!.paymentId != null && res.data!.bookingDetail!.paymentStatus != null && !res.data!.bookingDetail!.isFreeService)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1569,100 +1347,61 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                             backgroundColor: context.cardColor,
                             borderRadius: BorderRadius.all(Radius.circular(16)),
                           ),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 16),
+                          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(languages.lblId,
-                                      style: secondaryTextStyle(size: 14)),
-                                  Text(
-                                      "#" +
-                                          res.data!.bookingDetail!.paymentId
-                                              .toString(),
-                                      style: boldTextStyle()),
+                                  Text(languages.lblId, style: secondaryTextStyle(size: 14)),
+                                  Text("#" + res.data!.bookingDetail!.paymentId.toString(), style: boldTextStyle()),
                                 ],
                               ),
                               4.height,
                               Divider(color: context.dividerColor),
                               4.height,
-                              if (res.data!.bookingDetail!.paymentMethod
-                                  .validate()
-                                  .isNotEmpty)
+                              if (res.data!.bookingDetail!.paymentMethod.validate().isNotEmpty)
                                 Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(languages.lblMethod,
-                                        style: secondaryTextStyle(size: 14)),
+                                    Text(languages.lblMethod, style: secondaryTextStyle(size: 14)),
                                     Text(
-                                      (res.data!.bookingDetail!.paymentMethod !=
-                                                  null
-                                              ? res.data!.bookingDetail!
-                                                  .paymentMethod
-                                                  .toString()
-                                              : languages.notAvailable)
-                                          .capitalizeFirstLetter(),
+                                      (res.data!.bookingDetail!.paymentMethod != null ? res.data!.bookingDetail!.paymentMethod.toString() : languages.notAvailable).capitalizeFirstLetter(),
                                       style: boldTextStyle(),
                                     ),
                                   ],
                                 ),
                               4.height,
-                              Divider(color: context.dividerColor).visible(
-                                  res.data!.bookingDetail!.paymentMethod !=
-                                      null),
+                              Divider(color: context.dividerColor).visible(res.data!.bookingDetail!.paymentMethod != null),
                               8.height,
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(languages.lblStatus,
-                                      style: secondaryTextStyle(size: 14)),
+                                  Text(languages.lblStatus, style: secondaryTextStyle(size: 14)),
                                   Text(
-                                    getPaymentStatusText(
-                                        res.data!.bookingDetail!.paymentStatus
-                                            .validate(value: languages.pending),
-                                        res.data!.bookingDetail!.paymentMethod),
+                                    getPaymentStatusText(res.data!.bookingDetail!.paymentStatus.validate(value: languages.pending), res.data!.bookingDetail!.paymentMethod),
                                     style: boldTextStyle(),
                                   ),
                                 ],
                               ),
                               4.height,
-                              Divider(color: context.dividerColor).visible(
-                                  res.data!.bookingDetail!.paymentMethod !=
-                                      null),
+                              Divider(color: context.dividerColor).visible(res.data!.bookingDetail!.paymentMethod != null),
                               8.height,
                               Row(
                                 children: [
-                                  Text(languages.transactionId,
-                                      style: secondaryTextStyle(size: 14)),
+                                  Text(languages.transactionId, style: secondaryTextStyle(size: 14)),
                                   8.width,
                                   Row(
                                     children: [
-                                      Text(
-                                              res.data!.bookingDetail!.txnId
-                                                  .validate(),
-                                              textAlign: TextAlign.right,
-                                              style: boldTextStyle(),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis)
-                                          .expand(),
+                                      Text(res.data!.bookingDetail!.txnId.validate(), textAlign: TextAlign.right, style: boldTextStyle(), maxLines: 1, overflow: TextOverflow.ellipsis).expand(),
                                       4.width,
                                       InkWell(
                                         onTap: () async {
-                                          await res.data!.bookingDetail!.txnId
-                                              .validate()
-                                              .copyToClipboard();
+                                          await res.data!.bookingDetail!.txnId.validate().copyToClipboard();
                                           toast(languages.copied);
                                         },
-                                        child: SizedBox(
-                                            width: 23,
-                                            height: 23,
-                                            child: Icon(Icons.copy, size: 18)),
+                                        child: SizedBox(width: 23, height: 23, child: Icon(Icons.copy, size: 18)),
                                       ),
                                     ],
                                   ).expand(),
@@ -1675,14 +1414,12 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                     ).paddingOnly(left: 16, right: 16, bottom: 16),
 
                   CashPaymentHistoryScreen(
-                    bookingId:
-                        res.data!.bookingDetail!.id.validate().toString(),
+                    bookingId: res.data!.bookingDetail!.id.validate().toString(),
                     key: _paymentUniqueKey,
                   ),
 
                   /// Customer Review Widget
-                  if (res.data!.ratingData.validate().isNotEmpty)
-                    _customerReviewWidget(bookingDetailResponse: res.data!),
+                  if (res.data!.ratingData.validate().isNotEmpty) _customerReviewWidget(bookingDetailResponse: res.data!),
                 ],
               ),
               Positioned(
@@ -1691,15 +1428,12 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
                   width: context.width(),
                   decoration: BoxDecoration(color: context.cardColor),
                   child: _action(res: res.data!),
-                  padding: showBottomActionBar
-                      ? EdgeInsets.all(16)
-                      : EdgeInsets.zero,
+                  padding: showBottomActionBar ? EdgeInsets.all(16) : EdgeInsets.zero,
                 ),
               )
             ],
           ),
-          Observer(
-              builder: (context) => LoaderWidget().visible(appStore.isLoading))
+          Observer(builder: (context) => LoaderWidget().visible(appStore.isLoading))
         ],
       );
     }
@@ -1725,45 +1459,30 @@ class BookingDetailScreenState extends State<BookingDetailScreen> {
       future: future,
       initialData: initialData(),
       builder: (context, snap) {
-        if (snap.hasData) {
-          if (snap.data!.bookingDetail!.status == BookingStatusKeys.onGoing) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              startLocationUpdates();
-            });
-          } else {
-            stopLocationUpdates();
-          }
-        }
         return RefreshIndicator(
           onRefresh: () async {
             init(flag: true);
             return await 2.seconds.delay;
           },
           child: AppScaffold(
-            appBarTitle: snap.hasData
-                ? snap.data!.bookingDetail!.status.validate().toBookingStatus()
-                : "",
+            appBarTitle: snap.hasData ? snap.data!.bookingDetail!.status.validate().toBookingStatus() : "",
             actions: [
               if (snap.hasData)
                 TextButton(
-                  child: Text(languages.lblCheckStatus,
-                      style: boldTextStyle(color: white)),
+                  child: Text(languages.lblCheckStatus, style: boldTextStyle(color: white)),
                   onPressed: () {
                     showModalBottomSheet(
                       backgroundColor: Colors.transparent,
                       context: context,
                       isScrollControlled: true,
                       isDismissible: true,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: radiusOnly(
-                              topLeft: defaultRadius, topRight: defaultRadius)),
+                      shape: RoundedRectangleBorder(borderRadius: radiusOnly(topLeft: defaultRadius, topRight: defaultRadius)),
                       builder: (_) {
                         return DraggableScrollableSheet(
                           initialChildSize: 0.50,
                           minChildSize: 0.2,
                           maxChildSize: 1,
-                          builder: (context, scrollController) =>
-                              BookingHistoryBottomSheet(
+                          builder: (context, scrollController) => BookingHistoryBottomSheet(
                             data: snap.data!.bookingActivity!.reversed.toList(),
                             scrollController: scrollController,
                           ),

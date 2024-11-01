@@ -4,6 +4,7 @@ import 'package:handyman_provider_flutter/components/base_scaffold_widget.dart';
 import 'package:handyman_provider_flutter/components/empty_error_state_widget.dart';
 import 'package:handyman_provider_flutter/components/price_widget.dart';
 import 'package:handyman_provider_flutter/main.dart';
+import 'package:handyman_provider_flutter/screens/cash_management/cash_constant.dart';
 import 'package:handyman_provider_flutter/screens/cash_management/cash_repository.dart';
 import 'package:handyman_provider_flutter/screens/cash_management/component/cash_info_widget.dart';
 import 'package:handyman_provider_flutter/screens/cash_management/component/cash_list_widget.dart';
@@ -16,7 +17,9 @@ import 'package:handyman_provider_flutter/utils/constant.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class CashBalanceDetailScreen extends StatefulWidget {
-  const CashBalanceDetailScreen({Key? key}) : super(key: key);
+  final num totalCashInHand;
+
+  const CashBalanceDetailScreen({Key? key, required this.totalCashInHand}) : super(key: key);
 
   @override
   State<CashBalanceDetailScreen> createState() => _CashBalanceDetailScreenState();
@@ -29,10 +32,11 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
   List<CashFilterModel> cashStatusFilterList = currentStatusList;
   List<PaymentHistoryData> paymentHistoryList = [];
 
+  String selectedSortingType = TODAY;
+
   int page = 1;
   bool isLastPage = false;
 
-  int currentFilterIndex = 0;
   int currentFilterStatusIndex = 0;
   DateTimeRange? filterDate = DateTimeRange(start: DateTime.now(), end: DateTime.now());
 
@@ -49,7 +53,7 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
       disableLoader: disableLoader,
       toDate: formatBookingDate(filterDate!.end.toString(), format: DATE_FORMAT_7),
       statusType: cashStatusFilterList[currentFilterStatusIndex].type,
-      fromDate: formatBookingDate(filterDate!.end.toString(), format: DATE_FORMAT_7),
+      fromDate: formatBookingDate(filterDate!.start.toString(), format: DATE_FORMAT_7),
       lastPageCallback: (p0) => isLastPage = p0,
     );
   }
@@ -59,7 +63,7 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
     if (mounted) super.setState(fn);
   }
 
-  Widget buildTodayCashWidget({required num todayCash, required num totalCash}) {
+  Widget buildTodayCashWidget({required num todayCash, required num totalCashInHand}) {
     return Container(
       height: 120,
       color: context.primaryColor,
@@ -74,7 +78,7 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
             children: [
               Text(languages.totalCash, style: primaryTextStyle(color: Colors.white)),
               2.height,
-              PriceWidget(price: totalCash, size: 18, color: Colors.white),
+              PriceWidget(price: totalCashInHand, size: 18, color: Colors.white),
               16.height,
             ],
           ),
@@ -86,7 +90,11 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
               decoration: boxDecorationDefault(color: context.cardColor, borderRadius: radius()),
               child: Column(
                 children: [
-                  Text("${getDateInString(dateTime: filterDate!, format: DATE_FORMAT_2)} ${languages.cash}", style: secondaryTextStyle()),
+                  Text(
+                    "${getDateInString(dateTime: filterDate!, format: DATE_FORMAT_2)} ${languages.transactions}",
+                    style: secondaryTextStyle(),
+                    textAlign: TextAlign.center,
+                  ),
                   4.height,
                   PriceWidget(price: todayCash, size: 16),
                 ],
@@ -107,7 +115,18 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
           Row(
             children: [
               Text(languages.cashList, style: boldTextStyle(size: LABEL_TEXT_SIZE)).paddingSymmetric(horizontal: 16).expand(),
-              Text('${cashFilterList[currentFilterIndex].name.validate()}', style: secondaryTextStyle()),
+              InkWell(
+                onTap: () async {
+                  if (selectedSortingType == CUSTOM) {
+                    DateTimeRange selectedDateTimeRange = filterDate!;
+                    filterDate = await _handleDateRange(context, selectedDateTimeRange: selectedDateTimeRange) ?? selectedDateTimeRange;
+
+                    setState(() {});
+                    updateList();
+                  }
+                },
+                child: Text('${cashFilterList.firstWhere((element) => element.type == selectedSortingType).name}', style: secondaryTextStyle()),
+              ),
               IconButton(
                 onPressed: () {
                   showModalBottomSheet(
@@ -116,49 +135,63 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
                       return Container(
                         decoration: boxDecorationDefault(color: context.cardColor),
                         width: context.width(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            16.height,
-                            Text(languages.sortBy, style: boldTextStyle(size: 18)).paddingSymmetric(horizontal: 16),
-                            16.height,
-                            ...List.generate(
-                              cashFilterList.length,
-                              (index) {
-                                return RadioListTile<int>(
-                                  value: index,
-                                  title: Text(cashFilterList[index].name.validate(), style: primaryTextStyle()),
-                                  groupValue: currentFilterIndex,
-                                  onChanged: (index) async {
-                                    currentFilterIndex = index.validate();
-                                    if (currentFilterIndex == 2) {
-                                      filterDate = await _handleDateRange(context);
-                                      if (filterDate != null) {
-                                        updateList();
-                                      } else {
-                                        filterDate = DateTimeRange(start: DateTime.now(), end: DateTime.now());
-                                        currentFilterIndex = 0;
-                                        setState(() {});
-                                        updateList();
-                                      }
-                                      finish(context);
-                                    } else if (currentFilterIndex == 1) {
-                                      finish(context);
+                        height: context.height() * 0.8,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              16.height,
+                              Text(languages.filterBy, style: boldTextStyle(size: 18)).paddingSymmetric(horizontal: 16),
+                              16.height,
+                              ...List.generate(
+                                cashFilterList.length,
+                                (index) {
+                                  return RadioListTile<String>(
+                                    value: cashFilterList[index].type.validate(),
+                                    title: Text(cashFilterList[index].name.validate(), style: primaryTextStyle()),
+                                    groupValue: selectedSortingType,
+                                    onChanged: (type) async {
+                                      selectedSortingType = type.validate();
+                                      if (selectedSortingType == CUSTOM) {
+                                        filterDate = await _handleDateRange(context);
+                                        if (filterDate != null) {
+                                          //
+                                        } else {
+                                          filterDate = DateTimeRange(start: DateTime.now(), end: DateTime.now());
+                                          selectedSortingType = TODAY;
+                                        }
+                                      } else if (selectedSortingType == THIS_YEAR) {
+                                        DateTime now = DateTime.now();
+                                        filterDate = DateTimeRange(start: DateTime(now.year, 1, 1), end: DateTime.now());
+                                      } else if (selectedSortingType == THIS_MONTH) {
+                                        DateTime now = DateTime.now();
+                                        filterDate = DateTimeRange(start: DateTime(now.year, now.month, 1), end: DateTime.now());
+                                      } else if (selectedSortingType == THIS_WEEK) {
+                                        DateTime today = DateTime.now();
 
-                                      filterDate = DateTimeRange(start: DateTime.now().subtract(1.days), end: DateTime.now().subtract(1.days));
+                                        /// Calculate the start (Sunday) and end (Saturday) of the week
+                                        DateTime startOfWeek = today.subtract(Duration(days: today.weekday % 7));
+                                        DateTime endOfWeek = startOfWeek.add(Duration(days: 6));
+
+                                        filterDate = DateTimeRange(start: startOfWeek, end: endOfWeek);
+                                      } else if (selectedSortingType == YESTERDAY) {
+                                        filterDate = DateTimeRange(start: DateTime.now().subtract(1.days), end: DateTime.now().subtract(1.days));
+                                      } else if (selectedSortingType == TODAY) {
+                                        filterDate = DateTimeRange(start: DateTime.now(), end: DateTime.now());
+                                      }
+
+                                      appStore.setLoading(true);
                                       updateList();
-                                    } else if (currentFilterIndex == 0) {
+                                      setState(() {});
                                       finish(context);
-                                      filterDate = DateTimeRange(start: DateTime.now(), end: DateTime.now());
-                                      updateList();
-                                    }
-                                  },
-                                );
-                              },
-                            ),
-                            16.height,
-                          ],
+                                    },
+                                  );
+                                },
+                              ),
+                              16.height,
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -179,6 +212,7 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
               return GestureDetector(
                 onTap: () {
                   currentFilterStatusIndex = index;
+                  appStore.setLoading(true);
                   updateList();
                 },
                 child: StatusWidget(data: data, isSelected: isSelected),
@@ -190,10 +224,10 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
     );
   }
 
-  Future<DateTimeRange?> _handleDateRange(BuildContext context) async {
+  Future<DateTimeRange?> _handleDateRange(BuildContext context, {DateTimeRange? selectedDateTimeRange}) async {
     return await showDateRangePicker(
       context: context,
-      initialDateRange: filterDate,
+      initialDateRange: selectedDateTimeRange ?? filterDate,
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
       builder: (context, child) {
@@ -231,6 +265,7 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
         imageWidget: ErrorStateWidget(),
         retryText: languages.reload,
         onRetry: () {
+          appStore.setLoading(true);
           page = 1;
           updateList();
         },
@@ -249,7 +284,7 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
   }
 
   void updateList() {
-    init();
+   init();
     setState(() {});
   }
 
@@ -295,10 +330,10 @@ class _CashBalanceDetailScreenState extends State<CashBalanceDetailScreen> {
             padding: EdgeInsets.only(bottom: 60),
             listAnimationType: ListAnimationType.FadeIn,
             children: [
-              buildTodayCashWidget(todayCash: snap.$2, totalCash: snap.$1),
+              buildTodayCashWidget(todayCash: snap.$2, totalCashInHand: snap.$1),
               buildFilterWidget(),
               16.height,
-              // Text('${snap.$3.validate().where((element) => element.status == APPROVED_BY_HANDYMAN || element.status == SEND_TO_PROVIDER).sumByDouble((p0) => p0.totalAmount.validate())}', style: boldTextStyle()).paddingAll(16),
+              //Text('${snap.$3.validate().where((element) => element.status == APPROVED_BY_HANDYMAN || element.status == SEND_TO_PROVIDER).sumByDouble((p0) => p0.totalAmount.validate())}', style: boldTextStyle()).paddingAll(16),
               buildCashListWidget(list: snap.$3.validate()),
             ],
           );

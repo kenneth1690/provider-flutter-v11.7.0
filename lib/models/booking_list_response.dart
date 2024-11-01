@@ -102,7 +102,11 @@ class BookingData {
   bool get isFixedService => type.validate() == SERVICE_TYPE_FIXED;
 
   bool get canCustomerContact =>
-      status != BookingStatusKeys.pending && status != BookingStatusKeys.cancelled && status != BookingStatusKeys.failed && status != BookingStatusKeys.rejected && status != BookingStatusKeys.waitingAdvancedPayment;
+      (status == BookingStatusKeys.accept
+          || status == BookingStatusKeys.onGoing
+          || status == BookingStatusKeys.inProgress
+          || status == BookingStatusKeys.hold)
+          || !(paymentStatus == PAID || paymentStatus == PENDING_BY_ADMINS);
 
   num get totalExtraChargeAmount => extraCharges.validate().sumByDouble((e) => e.total.validate());
 

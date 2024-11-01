@@ -201,6 +201,7 @@ class _WithdrawRequestState extends State<WithdrawRequest> {
                   width: context.width() - context.navigationBarHeight,
                   onTap: () {
                     if (formKey.currentState!.validate()) {
+                      hideKeyboard(context);
                       withdrawMoney();
                     }
                   },

@@ -6,7 +6,6 @@ import 'package:handyman_provider_flutter/fragments/booking_fragment.dart';
 import 'package:handyman_provider_flutter/fragments/notification_fragment.dart';
 import 'package:handyman_provider_flutter/main.dart';
 import 'package:handyman_provider_flutter/provider/fragments/provider_home_fragment.dart';
-import 'package:handyman_provider_flutter/provider/fragments/provider_payment_fragment.dart';
 import 'package:handyman_provider_flutter/provider/fragments/provider_profile_fragment.dart';
 import 'package:handyman_provider_flutter/screens/chat/user_chat_list_screen.dart';
 import 'package:handyman_provider_flutter/utils/colors.dart';
@@ -38,8 +37,6 @@ class ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
     ProviderHomeFragment(),
     BookingFragment(),
     ChatListScreen(),
-    //todo: remove
-    //ProviderPaymentFragment(),
     ProviderProfileFragment(),
   ];
 
@@ -58,8 +55,7 @@ class ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
 
         window.onPlatformBrightnessChanged = () async {
           if (getIntAsync(THEME_MODE_INDEX) == THEME_MODE_SYSTEM) {
-            appStore
-                .setDarkMode(context.platformBrightness() == Brightness.light);
+            appStore.setDarkMode(context.platformBrightness() == Brightness.light);
           }
         };
       },
@@ -70,10 +66,10 @@ class ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
       setState(() {});
     });
 
-    await 3.seconds.delay;
-    if (getBoolAsync(FORCE_UPDATE_PROVIDER_APP)) {
-      showForceUpdateDialog(context);
-    }
+    // await 3.seconds.delay;
+    // if (getBoolAsync(FORCE_UPDATE_PROVIDER_APP)) {
+    //   showForceUpdateDialog(context);
+    // }
   }
 
   @override
@@ -103,13 +99,6 @@ class ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
           textColor: Colors.white,
           showBack: false,
           actions: [
-            //todo: remove
-            // IconButton(
-            //   icon: chat.iconImage(color: white, size: 20),
-            //   onPressed: () async {
-            //     ChatListScreen().launch(context);
-            //   },
-            // ),
             IconButton(
               icon: Stack(
                 clipBehavior: Clip.none,
@@ -124,12 +113,9 @@ class ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
                           return Container(
                             padding: EdgeInsets.all(4),
                             child: FittedBox(
-                              child: Text(appStore.notificationCount.toString(),
-                                  style: primaryTextStyle(
-                                      size: 12, color: Colors.white)),
+                              child: Text(appStore.notificationCount.toString(), style: primaryTextStyle(size: 12, color: Colors.white)),
                             ),
-                            decoration: boxDecorationDefault(
-                                color: Colors.red, shape: BoxShape.circle),
+                            decoration: boxDecorationDefault(color: Colors.red, shape: BoxShape.circle),
                           );
 
                         return Offstage();
@@ -152,8 +138,7 @@ class ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
             data: NavigationBarThemeData(
               backgroundColor: context.primaryColor.withOpacity(0.02),
               indicatorColor: context.primaryColor.withOpacity(0.1),
-              labelTextStyle:
-                  MaterialStateProperty.all(primaryTextStyle(size: 12)),
+              labelTextStyle: WidgetStateProperty.all(primaryTextStyle(size: 12)),
               surfaceTintColor: Colors.transparent,
               shadowColor: Colors.transparent,
             ),
@@ -162,45 +147,23 @@ class ProviderDashboardScreenState extends State<ProviderDashboardScreen> {
               destinations: [
                 NavigationDestination(
                   icon: ic_home.iconImage(color: appTextSecondaryColor),
-                  selectedIcon:
-                      ic_fill_home.iconImage(color: context.primaryColor),
+                  selectedIcon: ic_fill_home.iconImage(color: context.primaryColor),
                   label: languages.home,
                 ),
                 NavigationDestination(
                   icon: total_booking.iconImage(color: appTextSecondaryColor),
-                  selectedIcon:
-                      fill_ticket.iconImage(color: context.primaryColor),
+                  selectedIcon: fill_ticket.iconImage(color: context.primaryColor),
                   label: languages.lblBooking,
                 ),
                 NavigationDestination(
-                icon: Image.asset(chat, height: 20, width: 20, color: appTextSecondaryColor),
-                selectedIcon: Image.asset(ic_fill_textMsg, height: 26, width: 26),
-                label: languages.lblChat,
-              ),
-              //todo: remove -                      payment
-                // NavigationDestination(
-                //   icon: un_fill_wallet.iconImage(color: appTextSecondaryColor),
-                //   selectedIcon:
-                //       ic_fill_wallet.iconImage(color: context.primaryColor),
-                //   label: languages.lblPayment,
-                // ),
+                  icon: Image.asset(chat, height: 20, width: 20, color: appTextSecondaryColor),
+                  selectedIcon: Image.asset(ic_fill_textMsg, height: 26, width: 26),
+                  label: languages.lblChat,
+                ),
                 Observer(builder: (context) {
                   return NavigationDestination(
-                    icon: (appStore.isLoggedIn &&
-                            appStore.userProfileImage.isNotEmpty)
-                        ? IgnorePointer(
-                            ignoring: true,
-                            child: ImageBorder(
-                                src: appStore.userProfileImage, height: 26))
-                        : profile.iconImage(color: appTextSecondaryColor),
-                    selectedIcon: (appStore.isLoggedIn &&
-                            appStore.userProfileImage.isNotEmpty)
-                        ? IgnorePointer(
-                            ignoring: true,
-                            child: ImageBorder(
-                                src: appStore.userProfileImage, height: 26))
-                        : ic_fill_profile.iconImage(
-                            color: context.primaryColor),
+                    icon: (appStore.isLoggedIn && appStore.userProfileImage.isNotEmpty) ? IgnorePointer(ignoring: true, child: ImageBorder(src: appStore.userProfileImage, height: 26)) : profile.iconImage(color: appTextSecondaryColor),
+                    selectedIcon: (appStore.isLoggedIn && appStore.userProfileImage.isNotEmpty) ? IgnorePointer(ignoring: true, child: ImageBorder(src: appStore.userProfileImage, height: 26)) : ic_fill_profile.iconImage(color: context.primaryColor),
                     label: languages.lblProfile,
                   );
                 }),

@@ -77,13 +77,8 @@ Future<Response> buildHttpResponse(
     } else {
       return response;
     }
-  } on Exception catch (e) {
-    log(e);
-    if (!await isNetworkAvailable()) {
-      throw errorInternetNotAvailable;
-    } else {
-      throw errorSomethingWentWrong;
-    }
+  } on Exception {
+    throw errorInternetNotAvailable;
   }
 }
 
@@ -170,39 +165,43 @@ Future<MultipartRequest> getMultiPartRequest(String endPoint, {String? baseUrl})
   return MultipartRequest('POST', Uri.parse(url));
 }
 
+
 Future<void> sendMultiPartRequest(MultipartRequest multiPartRequest, {Function(dynamic)? onSuccess, Function(dynamic)? onError}) async {
-  http.Response response = await http.Response.fromStream(await multiPartRequest.send());
+  try {
+    http.Response response = await http.Response.fromStream(await multiPartRequest.send());
 
-  apiPrint(
-      url: multiPartRequest.url.toString(),
-      headers: jsonEncode(multiPartRequest.headers),
-      request: jsonEncode(multiPartRequest.fields),
-      hasRequest: true,
-      statusCode: response.statusCode,
-      responseBody: response.body,
-      methodtype: "MultiPart");
-  // log('response : ${response.body}');
+    apiPrint(
+        url: multiPartRequest.url.toString(),
+        headers: jsonEncode(multiPartRequest.headers),
+        request: jsonEncode(multiPartRequest.fields),
+        hasRequest: true,
+        statusCode: response.statusCode,
+        responseBody: response.body,
+        methodtype: "MultiPart");
 
-  if (response.statusCode.isSuccessful()) {
-    if (response.body.isJson()) {
-      onSuccess?.call(response.body);
+    if (response.statusCode.isSuccessful()) {
+      if (response.body.isJson()) {
+        onSuccess?.call(response.body);
+      } else {
+        onSuccess?.call(response.body);
+      }
     } else {
-      onSuccess?.call(response.body);
-    }
-  } else {
-    try {
       if (response.body.isJson()) {
         var body = jsonDecode(response.body);
         onError?.call(body['message'] ?? errorSomethingWentWrong);
       } else {
         onError?.call(errorSomethingWentWrong);
       }
-    } on Exception catch (e) {
-      log(e);
-      onError?.call(errorSomethingWentWrong);
     }
+  } on SocketException catch (e) {
+    log(e.toString());
+    onError?.call(languages.internetNotAvailable);
+  } on Exception catch (e) {
+    log(e.toString());
+    onError?.call(errorSomethingWentWrong);
   }
 }
+
 
 void apiPrint({
   String url = "",
@@ -258,6 +257,7 @@ Map<String, String> buildHeaderForAirtelMoney(String accessToken, String XCountr
 
   return header;
 }
+
 
 Map<String, String> defaultHeaders() {
   Map<String, String> header = {};

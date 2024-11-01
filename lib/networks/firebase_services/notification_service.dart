@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:handyman_provider_flutter/models/base_response.dart';
 import 'package:handyman_provider_flutter/models/firebase_details_model.dart';
 import 'package:handyman_provider_flutter/networks/network_utils.dart';
 import 'package:http/http.dart';
@@ -12,45 +11,6 @@ import '../../models/user_data.dart';
 
 class NotificationService {
   Future<void> sendPushNotifications(String title, String content, {String? image, required UserData receiverUser, required UserData senderUserData}) async {
-
-    // todo : remove this 
- /*   Map<String, dynamic> data = {
-      "created_at": senderUserData.createdAt,
-      "email": senderUserData.email,
-      "first_name": senderUserData.firstName,
-      "id": senderUserData.id.toString(),
-      "last_name": senderUserData.lastName,
-      "updated_at": senderUserData.updatedAt,
-      "profile_image": senderUserData.profileImage,
-      "uid": senderUserData.uid,
-    };
-
-    data.putIfAbsent("is_chat", () => '1');
-    if (image != null && image.isNotEmpty) data.putIfAbsent("image_url", () => image.validate());
-
-    Map req ={
-      "message": {
-        "topic": "user_${receiverUser.id.validate()}",
-        "notification": {
-          "body": content,
-          "title": "$title ${languages.sentYouAMessage}",
-          "image": image.validate(),
-        },
-        "data": data,
-      }
-    };
-
-    log("Send Notification request: ${req}");
-
-    /// NEW
-    // Notification Api call
-    await sendPushNotification(request: req).catchError((e){
-      toast(e.toString(),print: true);
-      return e;
-    });
-    /// END
-*/
-
     await getFirebaseTokenAndId().then((value) async {
       if (value.data != null) {
         Map<String, dynamic> data = {
@@ -67,7 +27,7 @@ class NotificationService {
         data.putIfAbsent("is_chat", () => '1');
         if (image != null && image.isNotEmpty) data.putIfAbsent("image_url", () => image.validate());
 
-        Map req ={
+        Map req = {
           "message": {
             "topic": "user_${receiverUser.id.validate()}",
             "notification": {
@@ -86,7 +46,7 @@ class NotificationService {
         };
 
         Response res = await post(
-          Uri.parse('https://fcm.googleapis.com/v1/projects/${value.data!.projectName}/messages:send'),
+          Uri.parse('https://fcm.googleapis.com/v1/projects/${value.data!.projectId}/messages:send'),
           body: jsonEncode(req),
           headers: header,
         );
@@ -102,8 +62,7 @@ class NotificationService {
     });
   }
 
-
   Future<FirebaseDetailsModel> getFirebaseTokenAndId({Map? request}) async {
-    return FirebaseDetailsModel.fromJson(await handleResponse(await buildHttpResponse('firebase-detail', request: request, method: HttpMethodType.POST)));
+    return FirebaseDetailsModel.fromJson(await handleResponse(await buildHttpResponse('firebase-detail', request: request, method: HttpMethodType.GET)));
   }
 }

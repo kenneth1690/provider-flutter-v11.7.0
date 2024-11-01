@@ -33,23 +33,19 @@ FirebaseDetailsModel copyWith({  bool? status,
 
 class Data {
   Data({
-      this.projectName, 
+      this.projectId,
       this.firebaseToken,});
 
   Data.fromJson(dynamic json) {
-    projectName = json['project_name'];
+    projectId= json['project_id'];
     firebaseToken = json['firebase_token'];
   }
-  String? projectName;
+  String? projectId;
   String? firebaseToken;
-Data copyWith({  String? projectName,
-  String? firebaseToken,
-}) => Data(  projectName: projectName ?? this.projectName,
-  firebaseToken: firebaseToken ?? this.firebaseToken,
-);
+
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
-    map['project_name'] = projectName;
+    map['project_id'] = projectId;
     map['firebase_token'] = firebaseToken;
     return map;
   }
