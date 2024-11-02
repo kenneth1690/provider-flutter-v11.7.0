@@ -1,3 +1,4 @@
+import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:handyman_provider_flutter/components/app_widgets.dart';
@@ -6,10 +7,12 @@ import 'package:handyman_provider_flutter/components/cached_image_widget.dart';
 import 'package:handyman_provider_flutter/main.dart';
 import 'package:handyman_provider_flutter/models/service_address_response.dart';
 import 'package:handyman_provider_flutter/models/user_data.dart';
+import 'package:handyman_provider_flutter/models/user_type_response.dart';
 import 'package:handyman_provider_flutter/networks/rest_apis.dart';
 import 'package:handyman_provider_flutter/utils/common.dart';
 import 'package:handyman_provider_flutter/utils/configs.dart';
 import 'package:handyman_provider_flutter/utils/constant.dart';
+import 'package:handyman_provider_flutter/utils/extensions/num_extenstions.dart';
 import 'package:handyman_provider_flutter/utils/extensions/string_extension.dart';
 import 'package:handyman_provider_flutter/utils/images.dart';
 import 'package:handyman_provider_flutter/utils/model_keys.dart';
@@ -47,10 +50,20 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
   FocusNode cPasswordFocus = FocusNode();
   FocusNode designationFocus = FocusNode();
 
+  ValueNotifier _valueNotifier = ValueNotifier(true);
+
+  Country selectedCountry = defaultCountry();
+
   List<AddressResponse> serviceAddressList = [];
   AddressResponse? selectedServiceAddress;
 
+  List<UserTypeData> commissionList = [
+    UserTypeData(name: languages.lblSelectCommission, id: -1)
+  ];
+  UserTypeData? selectedHandymanCommission;
+
   int? serviceAddressId;
+  int? commissionId;
 
   bool isUpdate = false;
 
@@ -64,9 +77,23 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
       lNameCont.text = widget.data!.lastName.validate();
       emailCont.text = widget.data!.email.validate();
       userNameCont.text = widget.data!.username.validate();
-      mobileCont.text = widget.data!.contactNumber.validate();
+      mobileCont.text = widget.data!.contactNumber?.split("-").last.validate() ?? "";
       serviceAddressId = widget.data!.serviceAddressId.validate();
+      commissionId = widget.data!.handymanCommissionId.validate();
       designationCont.text = widget.data!.designation.validate();
+      selectedCountry = Country(
+        phoneCode: widget.data!.contactNumber?.split("-").first.validate() ?? "",
+        countryCode: "",
+        e164Sc: 0,
+        geographic: true,
+        level: 0,
+        name: "",
+        example: "",
+        displayName: "",
+        displayNameNoCountryCode: "",
+        e164Key: "",
+      );
+      widget.data!.contactNumber?.split("-").first.validate();
     }
 
     init();
@@ -77,6 +104,7 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
 
   Future<void> init() async {
     getAddressList();
+    getCommissionList();
   }
 
   Future<void> getAddressList() async {
@@ -96,13 +124,41 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
     });
   }
 
+  Future<void> getCommissionList() async {
+    getCommissionType(type: USER_TYPE_HANDYMAN, providerId: appStore.userId)
+        .then((value) {
+      appStore.setLoading(false);
+      commissionList.addAll(value.userTypeData!);
+
+      commissionList.forEach((e) {
+        if (e.id == commissionId) {
+          selectedHandymanCommission = e;
+        }
+      });
+      setState(() {});
+    }).catchError((e) {
+      appStore.setLoading(false);
+      commissionList = [
+        UserTypeData(name: languages.lblSelectCommission, id: -1)
+      ];
+      log(e.toString());
+    });
+  }
+
+  // Build mobile number with phone code and number
+  String buildMobileNumber() {
+    return '${selectedCountry.phoneCode}-${mobileCont.text.trim()}';
+  }
+
   /// Register the Handyman
   Future<void> register() async {
     if (formKey.currentState!.validate()) {
+    if (selectedHandymanCommission == null || selectedHandymanCommission!.id == -1) {
+        return toast(languages.pleaseSelectCommission);
+      }
       formKey.currentState!.save();
       hideKeyboard(context);
       String? type = widget.userType;
-
       var request = {
         if (isUpdate) CommonKeys.id: widget.data!.id,
         UserKeys.firstName: fNameCont.text,
@@ -111,13 +167,14 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
         UserKeys.userType: type,
         UserKeys.providerId: appStore.userId,
         UserKeys.status: USER_STATUS_CODE,
-        UserKeys.contactNumber: mobileCont.text,
+        UserKeys.contactNumber: buildMobileNumber(),
         UserKeys.designation: designationCont.text.validate(),
-        if (serviceAddressId != null && serviceAddressId != -1) UserKeys.serviceAddressId: serviceAddressId.validate(),
+        if (serviceAddressId != null && serviceAddressId != -1)
+          UserKeys.serviceAddressId: serviceAddressId.validate(),
         UserKeys.email: emailCont.text,
+        UserKeys.handymanTypeId: selectedHandymanCommission?.id,
         if (!isUpdate) UserKeys.password: passwordCont.text
       };
-
       appStore.setLoading(true);
       if (isUpdate) {
         await updateProfile(request).then((res) async {
@@ -258,12 +315,18 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
                     child: Text(languages.lblDelete),
                     value: 1,
                     enabled: widget.data!.deletedAt == null,
-                    textStyle: boldTextStyle(color: widget.data!.deletedAt == null ? textPrimaryColorGlobal : null),
+                    textStyle: boldTextStyle(
+                        color: widget.data!.deletedAt == null
+                            ? textPrimaryColorGlobal
+                            : null),
                   ),
                   PopupMenuItem(
                     child: Text(languages.lblRestore),
                     value: 2,
-                    textStyle: boldTextStyle(color: widget.data!.deletedAt != null ? textPrimaryColorGlobal : null),
+                    textStyle: boldTextStyle(
+                        color: widget.data!.deletedAt != null
+                            ? textPrimaryColorGlobal
+                            : null),
                     enabled: widget.data!.deletedAt != null,
                   ),
                   PopupMenuItem(
@@ -286,7 +349,14 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (isUpdate) CachedImageWidget(url: widget.data!.profileImage.validate(value: profile), height: 100, circle: true, fit: BoxFit.cover).center(),
+                    if (isUpdate)
+                      CachedImageWidget(
+                              url: widget.data!.profileImage
+                                  .validate(value: profile),
+                              height: 100,
+                              circle: true,
+                              fit: BoxFit.cover)
+                          .center(),
                     30.height,
                     AppTextField(
                       textFieldType: TextFieldType.NAME,
@@ -340,28 +410,54 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
                       suffix: ic_message.iconImage(size: 10).paddingAll(14),
                     ),
                     16.height,
-                    AppTextField(
-                      textFieldType: TextFieldType.PHONE,
-                      controller: mobileCont,
-                      focus: mobileFocus,
-                      nextFocus: designationFocus,
-                      isValidationRequired: false,
-                      decoration: inputDecoration(
-                        context,
-                        hint: languages.hintContactNumberTxt,
-                        fillColor: context.scaffoldBackgroundColor,
-                      ),
-                      suffix: calling.iconImage(size: 10).paddingAll(14),
-                      validator: (mobileCont) {
-                        if (mobileCont!.isEmpty) return languages.lblPleaseEnterMobileNumber;
-                        if (!mobileCont.trim().contains('-')) return '"-" ${languages.lblRequiredAfterCountryCode}';
-                        return null;
-                      },
-                    ),
-                    12.height,
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: mobileNumberInfoWidget(context),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 48.0,
+                          decoration: BoxDecoration(
+                            color: context.scaffoldBackgroundColor,
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          child: Center(
+                            child: ValueListenableBuilder(
+                              valueListenable: _valueNotifier,
+                              builder: (context, value, child) => Row(
+                                children: [
+                                  Text(
+                                    "+${selectedCountry.phoneCode}",
+                                    style: primaryTextStyle(size: 12),
+                                  ).paddingOnly(left: 8),
+                                  Icon(Icons.arrow_drop_down)
+                                ],
+                              ),
+                            ),
+                          ),
+                        )
+                            .onTap(
+                              () => changeCountry(),
+                            )
+                            .paddingOnly(right: 10.0),
+                        Expanded(
+                          child: AppTextField(
+                            textFieldType: TextFieldType.PHONE,
+                            controller: mobileCont,
+                            focus: mobileFocus,
+                            nextFocus: designationFocus,
+                            isValidationRequired: false,
+                            decoration: inputDecoration(
+                              context,
+                              hint: languages.hintContactNumberTxt,
+                              fillColor: context.scaffoldBackgroundColor,
+                            ),
+                            suffix: calling.iconImage(size: 10).paddingAll(14),
+                            validator: (mobileCont) {
+                              if (mobileCont!.isEmpty) return languages.lblPleaseEnterMobileNumber;
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                     16.height,
                     AppTextField(
@@ -377,6 +473,79 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
                       ),
                     ),
                     16.height,
+                    // Select commission text field...
+                    DropdownButtonFormField<UserTypeData>(
+                      decoration: inputDecoration(
+                        context,
+                        hint: languages.lblSelectCommission,
+                        fillColor: context.scaffoldBackgroundColor,
+                      ),
+                      isExpanded: true,
+                      dropdownColor: context.cardColor,
+                      value: selectedHandymanCommission != null
+                          ? selectedHandymanCommission
+                          : null,
+                      items: commissionList.map((data) {
+                        return DropdownMenuItem<UserTypeData>(
+                          value: data,
+                          child: Row(
+                            children: [
+                              Text(data.name.toString(),
+                                  style: primaryTextStyle()),
+                              4.width,
+                              if (data.type == COMMISSION_TYPE_PERCENT)
+                                Text(
+                                  '(${data.commission.toString()}%)',
+                                  style: primaryTextStyle(),
+                                )
+                              else if (data.type == COMMISSION_TYPE_FIXED)
+                                Text(
+                                    '(${data.commission.validate().toPriceFormat()})',
+                                    style: primaryTextStyle()),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (UserTypeData? value) async {
+                        selectedHandymanCommission = value;
+                        commissionId =
+                            selectedHandymanCommission!.id.validate();
+                        setState(() {});
+                      },
+                    ).visible(commissionList.isNotEmpty),
+                    16.height,
+                    // DropDownTextField(
+
+                    //   // controller: _cnt,
+                    //   clearOption: true,
+                    //   enableSearch: true,
+                    //   clearIconProperty: IconProperty(color: Colors.green),
+                    //   searchTextStyle: const TextStyle(color: Colors.red),
+                    //   searchDecoration: const InputDecoration(
+                    //       hintText: "enter your custom hint text here"),
+                    //   validator: (value) {
+                    //     if (value == null) {
+                    //       return "Required field";
+                    //     } else {
+                    //       return null;
+                    //     }
+                    //   },
+
+                    //   dropDownItemCount: 6,
+                    //   dropDownList: serviceAddressList.map((data) {
+                    //     return DropDownValueModel(
+                    //       value: data,
+                    //       name: data.address.validate(),
+                    //     );
+                    //   }).toList(),
+
+                    //   onChanged: (value) {
+                    //     selectedServiceAddress = value;
+                    //     serviceAddressId =
+                    //         selectedServiceAddress!.id.validate();
+                    //     setState(() {});
+                    //   },
+                    // ),
                     DropdownButtonFormField<AddressResponse>(
                       decoration: inputDecoration(
                         context,
@@ -436,18 +605,22 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
                         ],
                       ),
                     24.height,
-                    AppButton(
-                      text: languages.btnSave,
-                      height: 40,
-                      color: primaryColor,
-                      textColor: white,
-                      width: context.width() - context.navigationBarHeight,
-                      onTap: () {
-                        ifNotTester(context, () {
-                          register();
-                        });
-                      },
-                    ),
+                    Observer(
+                      builder: (context) => AppButton(
+                        text: languages.btnSave,
+                        height: 40,
+                        color: primaryColor,
+                        textColor: white,
+                        width: context.width() - context.navigationBarHeight,
+                        onTap: appStore.isLoading
+                            ? null
+                            : () {
+                                ifNotTester(context, () {
+                                  register();
+                                });
+                              },
+                      ),
+                    )
                   ],
                 ),
               ),
@@ -456,6 +629,32 @@ class HandymanAddUpdateScreenState extends State<HandymanAddUpdateScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // Change country code function...
+  Future<void> changeCountry() async {
+    showCountryPicker(
+      context: context,
+      countryListTheme: CountryListThemeData(
+        textStyle: secondaryTextStyle(color: textSecondaryColorGlobal),
+        searchTextStyle: primaryTextStyle(),
+        inputDecoration: InputDecoration(
+          labelText: languages.search,
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: const Color(0xFF8C98A8).withOpacity(0.2),
+            ),
+          ),
+        ),
+      ),
+      showPhoneCode:
+          true, // optional. Shows phone code before the country name.
+      onSelect: (Country country) {
+        selectedCountry = country;
+        _valueNotifier.notifyListeners();
+      },
     );
   }
 }

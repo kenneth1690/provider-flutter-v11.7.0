@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:handyman_provider_flutter/components/back_widget.dart';
 import 'package:handyman_provider_flutter/main.dart';
+import 'package:handyman_provider_flutter/networks/rest_apis.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../utils/constant.dart';
@@ -54,10 +55,11 @@ class LanguagesScreenState extends State<LanguagesScreen> {
       ),
       body: LanguageListWidget(
         widgetType: WidgetType.LIST,
-        onLanguageChange: (v) {
-          appStore.setLanguage(v.languageCode!).then((v){
+        onLanguageChange: (v) async {
+          appStore.setLanguage(v.languageCode!).then((v) {
             refreshList();
           });
+          await changeLanguage({"locale": v.languageCode});
           setState(() {});
           finish(context);
         },

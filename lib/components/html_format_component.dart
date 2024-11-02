@@ -16,7 +16,7 @@ class HTMLFormatComponent extends StatelessWidget {
     return Html(
       data: postContent.validate(),
       onAnchorTap: (s, _, __) {
-        //TODO
+        //
       },
       /*onImageTap: (s, _, __, ___) {
         ImageScreen(imageURl: s.validate());

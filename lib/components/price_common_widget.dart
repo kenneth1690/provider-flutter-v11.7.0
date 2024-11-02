@@ -196,6 +196,19 @@ class PriceCommonWidget extends StatelessWidget {
                   ),
 
                 if ((bookingDetail.isHourlyService || bookingDetail.isFixedService) && bookingDetail.bookingType.validate() == BOOKING_TYPE_SERVICE)
+                  if (bookingDetail.totalExtraChargeAmount != 0)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(languages.lblTotalCharges, style: secondaryTextStyle(size: 14)).expand(),
+                            PriceWidget(price: bookingDetail.totalExtraChargeAmount, color: textPrimaryColorGlobal),
+                          ],
+                        ),
+                        Divider(height: 26, color: context.dividerColor),
+                      ],
+                    ),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -204,19 +217,6 @@ class PriceCommonWidget extends StatelessWidget {
                         children: [
                           Text(languages.lblSubTotal, style: secondaryTextStyle(size: 14)).flexible(fit: FlexFit.loose),
                           PriceWidget(price: bookingDetail.finalSubTotal.validate(), color: textPrimaryColorGlobal, isBoldText: true),
-                        ],
-                      ),
-                      Divider(height: 26, color: context.dividerColor),
-                    ],
-                  ),
-                if (bookingDetail.totalExtraChargeAmount != 0)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(languages.lblTotalCharges, style: secondaryTextStyle(size: 14)).expand(),
-                          PriceWidget(price: bookingDetail.totalExtraChargeAmount, color: textPrimaryColorGlobal),
                         ],
                       ),
                       Divider(height: 26, color: context.dividerColor),
@@ -237,7 +237,7 @@ class PriceCommonWidget extends StatelessWidget {
                                   showModalBottomSheet(
                                     context: context,
                                     builder: (_) {
-                                      return AppliedTaxListBottomSheet(taxes: bookingDetail.taxes.validate(), subTotal: bookingDetail.finalSubTotal.validate() + bookingDetail.totalExtraChargeAmount);
+                                      return AppliedTaxListBottomSheet(taxes: bookingDetail.taxes.validate(), subTotal: bookingDetail.finalSubTotal.validate());
                                     },
                                   );
                                 },

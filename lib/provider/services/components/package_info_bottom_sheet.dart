@@ -114,7 +114,7 @@ class _PackageInfoComponentState extends State<PackageInfoComponent> {
                                 ),
                               )
                             else
-                              Text('${data.categoryName}', style: boldTextStyle(size: 14, color: context.primaryColor)),
+                              Text('${data.categoryName}', style: boldTextStyle(size: 12, color: context.primaryColor)),
                             4.height,
                             PriceWidget(
                               price: data.price.validate(),

@@ -39,7 +39,7 @@ class AboutUsScreen extends StatelessWidget {
               children: [
                 Image.asset(aboutList[index].image.toString(), height: 22, width: 22, color: context.iconColor),
                 8.height,
-                Text(aboutList[index].title.toString(), style: boldTextStyle(size: LABEL_TEXT_SIZE)),
+                Text(aboutList[index].title.toString(), style: primaryTextStyle(size: LABEL_TEXT_SIZE)),
               ],
             ),
           ).onTap(

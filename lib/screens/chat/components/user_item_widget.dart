@@ -20,11 +20,19 @@ class _UserItemWidgetState extends State<UserItemWidget> {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<UserData>(
-      stream: userService.singleUser(widget.userUid),
-      builder: (context, snap) {
-        if (snap.hasData) {
+        stream: userService.singleUser(widget.userUid),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            // Show a loading indicator while waiting for data
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(languages.loadingChats, style: primaryTextStyle(), textAlign: TextAlign.center),
+            );
+          }
+          if (snap.hasError || !snap.hasData || snap.data == null) {
+            return SizedBox.shrink();
+          }
           UserData data = snap.data!;
-
           return InkWell(
             onTap: () {
               UserChatScreen(receiverUser: data).launch(context, pageRouteAnimation: PageRouteAnimation.Fade, duration: 300.milliseconds);
@@ -39,7 +47,10 @@ class _UserItemWidgetState extends State<UserItemWidget> {
                       width: 40,
                       padding: EdgeInsets.all(10),
                       color: context.primaryColor.withOpacity(0.2),
-                      child: Text(data.displayName.validate()[0].validate().toUpperCase(), style: boldTextStyle(color: context.primaryColor)).center().fit(),
+                      child: Text(
+                        data.displayName.validate()[0].validate().toUpperCase(),
+                        style: boldTextStyle(color: context.primaryColor),
+                      ).center().fit(),
                     ).cornerRadiusWithClipRRect(50)
                   else
                     CachedImageWidget(url: data.profileImage.validate(), height: 40, circle: true, fit: BoxFit.cover),
@@ -59,19 +70,17 @@ class _UserItemWidgetState extends State<UserItemWidget> {
                           StreamBuilder<int>(
                             stream: chatServices.getUnReadCount(senderId: appStore.uid.validate(), receiverId: data.uid.validate()),
                             builder: (context, snap) {
-                              if (snap.hasData) {
-                                if (snap.data != 0) {
-                                  return Container(
-                                    height: 18,
-                                    width: 18,
-                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: primaryColor),
-                                    child: Text(
-                                      snap.data.validate().toString(),
-                                      style: secondaryTextStyle(color: white),
-                                      textAlign: TextAlign.center,
-                                    ).center(),
-                                  );
-                                }
+                              if (snap.hasData && snap.data != 0) {
+                                return Container(
+                                  height: 18,
+                                  width: 18,
+                                  decoration: BoxDecoration(borderRadius: BorderRadius.circular(20), color: primaryColor),
+                                  child: Text(
+                                    snap.data.validate().toString(),
+                                    style: secondaryTextStyle(color: white),
+                                    textAlign: TextAlign.center,
+                                  ).center(),
+                                );
                               }
                               return Offstage();
                             },
@@ -85,13 +94,6 @@ class _UserItemWidgetState extends State<UserItemWidget> {
               ),
             ),
           );
-        }
-        return Container(
-          alignment: Alignment.centerLeft,
-          padding: EdgeInsets.all(16),
-          child: Text(languages.loadingChats, style: primaryTextStyle()),
-        );
-      },
-    );
+        });
   }
 }

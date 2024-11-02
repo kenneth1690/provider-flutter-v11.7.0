@@ -54,7 +54,7 @@ class _PackageComponentState extends State<PackageComponent> {
         ListView.builder(
           shrinkWrap: true,
           itemCount: widget.servicePackage.length,
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.symmetric(horizontal: 16),
           physics: NeverScrollableScrollPhysics(),
           itemBuilder: (_, i) {
             PackageData data = widget.servicePackage[i];
@@ -62,7 +62,6 @@ class _PackageComponentState extends State<PackageComponent> {
             return Container(
               width: context.width(),
               padding: EdgeInsets.all(16),
-              margin: EdgeInsets.all(8),
               decoration: boxDecorationWithRoundedCorners(
                 borderRadius: radius(),
                 backgroundColor: context.cardColor,

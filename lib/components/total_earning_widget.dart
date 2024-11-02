@@ -30,7 +30,7 @@ class TotalEarningWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(languages.paymentMethod, style: secondaryTextStyle(size: 16)),
+              Text(languages.paymentMethod, style: primaryTextStyle()),
               Text(
                 totalEarning.paymentMethod.validate().capitalizeFirstLetter(),
                 style: boldTextStyle(color: primaryColor),
@@ -69,7 +69,7 @@ class TotalEarningWidget extends StatelessWidget {
                   children: [
                     Text(languages.lblDate, style: secondaryTextStyle(size: 14)),
                     Text(
-                      formatDate(totalEarning.createdAt.validate().toString(), format: DATE_FORMAT_2),
+                      formatDate(totalEarning.createdAt.validate().toString(), format: DATE_FORMAT_9),
                       style: boldTextStyle(size: 14),
                     ),
                   ],

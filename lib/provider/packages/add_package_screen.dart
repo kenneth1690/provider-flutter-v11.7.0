@@ -170,8 +170,7 @@ class _AddPackageScreenState extends State<AddPackageScreen> {
         borderRadius: radius(),
         backgroundColor: context.cardColor,
       ),
-      child: Wrap(
-        runSpacing: 16,
+      child: Column(
         children: [
           Form(
             key: formKey,
@@ -435,11 +434,12 @@ class _AddPackageScreenState extends State<AddPackageScreen> {
         color: context.primaryColor,
       ),
       body: Stack(
-        fit: StackFit.expand,
+        alignment: AlignmentDirectional.center,
         children: [
           SingleChildScrollView(
-            padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 90),
+            padding: EdgeInsets.only(top: 16, left: 16.0, right: 16.0, bottom: 25.0),
             child: Column(
+              mainAxisSize: MainAxisSize.max,
               children: [
                 CustomImagePicker(
                   key: uniqueKey,
@@ -481,24 +481,22 @@ class _AddPackageScreenState extends State<AddPackageScreen> {
                 ),
                 8.height,
                 buildFormWidget(),
+                Observer(
+                    builder: (context) => AppButton(
+                          text: context.translate.btnSave,
+                          height: 40,
+                          color: context.primaryColor,
+                          textStyle: boldTextStyle(color: white),
+                          width: context.width() - context.navigationBarHeight,
+                          onTap: appStore.isLoading
+                              ? null
+                              : () {
+                                  ifNotTester(context, () {
+                                    checkValidation();
+                                  });
+                                },
+                        ))
               ],
-            ),
-          ),
-          Positioned(
-            right: 16,
-            left: 16,
-            bottom: 16,
-            child: AppButton(
-              text: context.translate.btnSave,
-              height: 40,
-              color: context.primaryColor,
-              textStyle: boldTextStyle(color: white),
-              width: context.width() - context.navigationBarHeight,
-              onTap: () {
-                ifNotTester(context, () {
-                  checkValidation();
-                });
-              },
             ),
           ),
           Observer(builder: (_) => LoaderWidget().center().visible(appStore.isLoading)),

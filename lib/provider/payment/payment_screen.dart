@@ -201,7 +201,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
       appStore.setLoading(false);
       paystackServices.checkout();
     } else if (selectedPaymentSetting!.type == PAYMENT_METHOD_MIDTRANS) {
-      //TODO: all params check
       MidtransService midtransService = MidtransService();
       appStore.setLoading(true);
       await midtransService.initialize(
@@ -216,7 +215,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             data: widget.selectedPricingPlan,
             paymentMethod: PAYMENT_METHOD_MIDTRANS,
             paymentStatus: BOOKING_STATUS_PAID,
-            txnId: res["transaction_id"], //TODO: check
+            txnId: res["transaction_id"],
           );
         },
       );

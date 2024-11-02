@@ -31,7 +31,6 @@ const completed = Color(0xFF3CAE5C);
 const defaultStatus = Color(0xFF3CAE5C);
 const pendingApprovalColor = Color(0xFF690AD3);
 const waiting = Color(0xFF2CAFAF);
-const addExtraCharge = Color(0xFFFD6922);
 
 const add_booking = Color(0xFFEA2F2F);
 const assigned_booking = Color(0xFFFD6922);
@@ -48,3 +47,5 @@ const wallet_payout_transfer = Color(0xFFFD6922);
 const rattingColor = Color(0xfff5c609);
 
 const startDriveButtonColor = Color(0xff40c474);
+
+const addExtraCharge = Color(0xFFFD6922);

@@ -14,7 +14,8 @@ class DashboardResponse {
   int? totalBooking;
   int? totalService;
   num? todayCashAmount;
-  int? totalHandyman;
+  num? totalCashInHand;
+  int? totalActiveHandyman;
   List<ServiceData>? service;
   List<UserData>? handyman;
   num? totalRevenue;
@@ -27,6 +28,7 @@ class DashboardResponse {
   List<PostJobData>? myPostJobData;
   List<BookingData>? upcomingBookings;
   num? notificationUnreadCount;
+  num? remainingPayout;
 
   //Local
   bool get isPlanAboutToExpire => isSubscribed == 1;
@@ -40,7 +42,8 @@ class DashboardResponse {
     this.totalBooking,
     this.service,
     this.totalService,
-    this.totalHandyman,
+    this.totalActiveHandyman,
+    this.totalCashInHand,
     this.handyman,
     this.totalRevenue,
     this.commission,
@@ -51,6 +54,7 @@ class DashboardResponse {
     this.notificationUnreadCount,
     this.todayCashAmount,
     this.isEmailVerified = 0,
+    this.remainingPayout,
   });
 
   DashboardResponse.fromJson(Map<String, dynamic> json) {
@@ -59,8 +63,9 @@ class DashboardResponse {
     totalBooking = json['total_booking'];
     totalRevenue = json['total_revenue'];
     totalService = json['total_service'];
-    totalHandyman = json['total_handyman'];
+    totalActiveHandyman = json['total_active_handyman'];
     todayCashAmount = json['today_cash'];
+    totalCashInHand = json['total_cash_in_hand'];
     commission = json['commission'] != null ? Commission.fromJson(json['commission']) : null;
     if (json['service'] != null) {
       service = [];
@@ -76,7 +81,7 @@ class DashboardResponse {
     }
 
     Iterable it = json['monthly_revenue']['revenueData'];
-
+    chartData = [];
     it.forEachIndexed((element, index) {
       if ((element as Map).containsKey('${index + 1}')) {
         chartData.add(RevenueChartData(month: months[index], revenue: element[(index + 1).toString()].toString().toDouble()));
@@ -93,6 +98,7 @@ class DashboardResponse {
     isSubscribed = json['is_subscribed'] ?? 0;
     subscription = json['subscription'] != null ? ProviderSubscriptionModel.fromJson(json['subscription']) : null;
     notificationUnreadCount = json['notification_unread_count'];
+    remainingPayout = json['remaining_payout'];
   }
 
   Map<String, dynamic> toJson() {
@@ -101,11 +107,12 @@ class DashboardResponse {
     data['total_booking'] = this.totalBooking;
     data['total_service'] = this.totalService;
     data['today_cash'] = this.todayCashAmount;
+    data['total_cash_in_hand'] = this.totalCashInHand;
     data['is_email_verified'] = this.isEmailVerified;
     if (this.commission != null) {
       data['commission'] = this.commission!.toJson();
     }
-    data['total_handyman'] = this.totalHandyman;
+    data['total_active_handyman'] = this.totalActiveHandyman;
     if (this.service != null) {
       data['service'] = this.service!.map((v) => v.toJson()).toList();
     }
@@ -126,6 +133,7 @@ class DashboardResponse {
       data['upcomming_booking'] = this.upcomingBookings!.map((v) => v.toJson()).toList();
     }
     data['notification_unread_count'] = this.notificationUnreadCount;
+    data['remaining_payout'] = this.remainingPayout;
 
     return data;
   }
@@ -166,7 +174,7 @@ class CategoryData {
 }
 
 class Commission {
-  int? commission;
+  num? commission;
   String? createdAt;
   String? deletedAt;
   int? id;

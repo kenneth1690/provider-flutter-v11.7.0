@@ -112,7 +112,7 @@ class CouponData {
   String? code;
   String? createdAt;
   String? deletedAt;
-  int? discount;
+  num? discount;
   String? discountType;
   int? id;
   String? updatedAt;

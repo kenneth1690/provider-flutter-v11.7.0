@@ -22,6 +22,9 @@ const APPROVED_BY_ADMIN = "approved_by_admin"; //- Admin approved the request
 const TODAY = "today";
 const YESTERDAY = "yesterday";
 const CUSTOM = "custom";
+const THIS_WEEK = "this_week";
+const THIS_MONTH = "this_month";
+const THIS_YEAR = "this_year";
 const CASHES = "cash";
 const BANK = "bank";
 

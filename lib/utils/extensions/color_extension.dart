@@ -6,7 +6,7 @@ import 'package:nb_utils/nb_utils.dart';
 import '../constant.dart';
 
 extension colorExt on String {
-  Color get getPaymentStatusBackgroundColor {
+  Color get getBookingStatusBackgroundColor {
     switch (this) {
       case BOOKING_STATUS_PENDING:
         return pending;
@@ -59,7 +59,7 @@ extension colorExt on String {
   Color get getCashPaymentStatusBackgroundColor {
     Color text = Colors.transparent;
     if (this == APPROVED_BY_HANDYMAN) {
-      text = add_booking;
+      text = completed;
     } else if (this == SEND_TO_PROVIDER) {
       text = assigned_booking;
     } else if (this == PENDING_BY_PROVIDER) {

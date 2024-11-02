@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:handyman_provider_flutter/components/add_known_languages_component.dart';
@@ -82,6 +84,10 @@ class EditProfileScreenState extends State<EditProfileScreen> {
   FocusNode descriptionFocus = FocusNode();
   FocusNode whyChooseMeFocus = FocusNode();
 
+  ValueNotifier _valueNotifier = ValueNotifier(true);
+
+  Country selectedCountryPicker = defaultCountry();
+
   int countryId = 0;
   int stateId = 0;
   int cityId = 0;
@@ -110,14 +116,25 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     lNameCont.text = appStore.userLastName;
     emailCont.text = appStore.userEmail;
     userNameCont.text = appStore.userName;
-    mobileCont.text = appStore.userContactNumber;
+    mobileCont.text = appStore.userContactNumber.split("-").last.toString();
     countryId = appStore.countryId;
     stateId = appStore.stateId;
     cityId = appStore.cityId;
     addressCont.text = appStore.address;
     serviceAddressId = appStore.serviceAddressId;
     designationCont.text = appStore.designation;
-
+    selectedCountryPicker = Country(
+      phoneCode: appStore.userContactNumber.split("-").first.isEmpty ? "+91" : appStore.userContactNumber.split("-").first.toString(),
+      countryCode: "",
+      e164Sc: 0,
+      geographic: true,
+      level: 0,
+      name: "",
+      example: "",
+      displayName: "",
+      displayNameNoCountryCode: "",
+      e164Key: "",
+    );
     userDetailAPI();
 
     if (getIntAsync(COUNTRY_ID) != 0) {
@@ -236,7 +253,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
     multiPartRequest.fields[UserKeys.lastName] = lNameCont.text;
     multiPartRequest.fields[UserKeys.userName] = userNameCont.text;
     multiPartRequest.fields[UserKeys.userType] = getStringAsync(USER_TYPE);
-    multiPartRequest.fields[UserKeys.contactNumber] = mobileCont.text;
+    multiPartRequest.fields[UserKeys.contactNumber] = mobileCont.text.isEmpty ? '' : selectedCountryPicker.phoneCode + "-" + mobileCont.text;
     multiPartRequest.fields[UserKeys.email] = emailCont.text;
     multiPartRequest.fields[UserKeys.countryId] = countryId.toString();
     multiPartRequest.fields[UserKeys.stateId] = stateId.toString();
@@ -266,7 +283,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         if (data != null) {
           if ((data as String).isJson()) {
             UserUpdateResponse res = UserUpdateResponse.fromJson(jsonDecode(data));
-            
+
             if (FirebaseAuth.instance.currentUser != null) {
               userService.updateDocument({
                 'profile_image': res.data!.profileImage.validate(),
@@ -511,26 +528,45 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ).paddingSymmetric(vertical: 6),
                         10.height,
-                        AppTextField(
-                          textFieldType: isAndroid ? TextFieldType.PHONE : TextFieldType.NAME,
-                          controller: mobileCont,
-                          focus: mobileFocus,
-                          decoration: inputDecoration(context, hint: languages.hintContactNumberTxt),
-                          suffix: calling.iconImage(size: 10).paddingAll(14),
-                          validator: (mobileCont) {
-                            if (mobileCont!.isEmpty) return languages.lblPleaseEnterMobileNumber;
-                            if (isIOS && !RegExp(r"^([0-9]{1,5})-([0-9]{1,10})$").hasMatch(mobileCont)) {
-                              return languages.inputMustBeNumberOrDigit;
-                            }
-                            if (!mobileCont.trim().contains('-')) return '"-" ${languages.requiredAfterCountryCode}';
-                            return null;
-                          },
-                          maxLength: 15,
-                        ),
-                        12.height,
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: mobileNumberInfoWidget(context),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Country code ...
+                            Container(
+                              height: 48.0,
+                              decoration: BoxDecoration(
+                                color: context.cardColor,
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              child: Center(
+                                child: ValueListenableBuilder(
+                                  valueListenable: _valueNotifier,
+                                  builder: (context, value, child) => Row(
+                                    children: [
+                                      Text(
+                                        "+${selectedCountryPicker.phoneCode}",
+                                        style: primaryTextStyle(size: 12),
+                                      ).paddingOnly(left: 8),
+                                      Icon(Icons.arrow_drop_down)
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ).onTap(() => changeCountry()),
+                            10.width,
+                            // Mobile number text field...
+                            AppTextField(
+                              textFieldType: isAndroid ? TextFieldType.PHONE : TextFieldType.NAME,
+                              controller: mobileCont,
+                              focus: mobileFocus,
+                              decoration: inputDecoration(context, hint: languages.hintContactNumberTxt).copyWith(
+                                hintStyle: secondaryTextStyle(),
+                              ),
+                              suffix: calling.iconImage(size: 10).paddingAll(14),
+                              isValidationRequired: false,
+                              maxLength: 15,
+                            ).expand(),
+                          ],
                         ),
                         16.height,
                         AppTextField(
@@ -848,6 +884,30 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Future<void> changeCountry() async {
+    showCountryPicker(
+      context: context,
+      countryListTheme: CountryListThemeData(
+        textStyle: secondaryTextStyle(color: textSecondaryColorGlobal),
+        searchTextStyle: primaryTextStyle(),
+        inputDecoration: InputDecoration(
+          labelText: languages.search,
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: const Color(0xFF8C98A8).withOpacity(0.2),
+            ),
+          ),
+        ),
+      ),
+      showPhoneCode: true, // optional. Shows phone code before the country name.
+      onSelect: (Country country) {
+        selectedCountryPicker = country;
+        _valueNotifier.notifyListeners();
+      },
     );
   }
 }

@@ -28,8 +28,8 @@ Future<(num, num, List<PaymentHistoryData>)> getCashDetails({
 }) async {
   final queryParams = <String, dynamic>{
     if (page != null) 'page': page.toString(),
-    if (toDate != null) 'to': toDate,
     if (fromDate != null) 'from': fromDate,
+    if (toDate != null) 'to': toDate,
     if (statusType != null) 'status': statusType,
     'per_page': PER_PAGE_ITEM,
   };
@@ -44,7 +44,8 @@ Future<(num, num, List<PaymentHistoryData>)> getCashDetails({
 
     list.addAll(res.data.validate());
     lastPageCallback?.call(res.data.validate().length != PER_PAGE_ITEM);
-    return (res.totalCash.validate(), res.todayCash.validate(), list);
+    appStore.setLoading(false);
+    return (res.totalCashInHand.validate(), res.todayCash.validate(), list);
   } catch (e) {
     if (!disableLoader) {
       appStore.setLoading(false);

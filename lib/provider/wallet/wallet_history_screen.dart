@@ -7,6 +7,7 @@ import 'package:handyman_provider_flutter/provider/wallet/components/wallet_card
 import 'package:handyman_provider_flutter/provider/wallet/shimmer/wallet_history_shimmer.dart';
 import 'package:handyman_provider_flutter/utils/extensions/num_extenstions.dart';
 import 'package:nb_utils/nb_utils.dart';
+
 import '../../components/empty_error_state_widget.dart';
 import '../../utils/common.dart';
 import '../../utils/constant.dart';
@@ -42,6 +43,8 @@ class WalletHistoryScreenState extends State<WalletHistoryScreen> {
         isLastPage = b;
       },
     );
+
+    appStore.setUserWalletAmount();
   }
 
   @override
@@ -60,6 +63,7 @@ class WalletHistoryScreenState extends State<WalletHistoryScreen> {
         onSuccess: (snap) {
           return AnimatedScrollView(
             crossAxisAlignment: CrossAxisAlignment.start,
+            physics: AlwaysScrollableScrollPhysics(),
             children: [
               16.height,
               WalletCard(
@@ -94,56 +98,62 @@ class WalletHistoryScreenState extends State<WalletHistoryScreen> {
                     width: context.width(),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [ 
+                      children: [
                         Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: snap[index].activityData!.transactionType.isEmptyOrNull ? Colors.red.shade50 :snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT)? Colors.red.shade50 : Colors.green.shade50,
+                            color: snap[index].activityData!.transactionType.isEmptyOrNull
+                                ? Colors.red.shade50
+                                : snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT)
+                                    ? Colors.red.shade50
+                                    : Colors.green.shade50,
                           ),
-                          child:   Image.asset(
-                          snap[index].activityData!.transactionType.isEmptyOrNull?ic_diagonal_right_up_arrow:  snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT) ? ic_diagonal_right_up_arrow : ic_diagonal_left_down_arrow,
+                          child: Image.asset(
+                            snap[index].activityData!.transactionType.isEmptyOrNull
+                                ? ic_diagonal_right_up_arrow
+                                : snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT)
+                                    ? ic_diagonal_right_up_arrow
+                                    : ic_diagonal_left_down_arrow,
                             height: 18,
                             width: 18,
-                            color:  snap[index].activityData!.transactionType.isEmptyOrNull ? Colors.red: snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT) ? Colors.red : Colors.green,
+                            color: snap[index].activityData!.transactionType.isEmptyOrNull
+                                ? Colors.red
+                                : snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT)
+                                    ? Colors.red
+                                    : Colors.green,
                           ),
                         ),
                         16.width,
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (data.activityMessage.validate().isNotEmpty)
-                                  Text(
-                                    data.activityMessage.validate(),style: boldTextStyle(size: 12),
-                                     maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                  ).expand(),
-                                Text(formatDate(snap[index].datetime), style: secondaryTextStyle(), maxLines: 2, overflow: TextOverflow.ellipsis),
-                              ],
+                            if (data.activityMessage.validate().isNotEmpty)
+                              Text(
+                                data.activityMessage.validate(),
+                                style: boldTextStyle(size: 12),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            4.height,
+                            Text(
+                              formatDate(snap[index].datetime, showDateWithTime: true),
+                              style: secondaryTextStyle(),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            Row(
-                              children: [
-                                Text(
-                                  snap[index].activityData!.transactionType.isEmptyOrNull ?languages.debit: snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT) ? languages.debit : languages.credit,
-                                  style: primaryTextStyle(size: 10),
-                                  maxLines: 3,
-                                  overflow: TextOverflow.ellipsis,
-                                ).expand(),
-                                16.width,
-                                Text(
-                                  snap[index].activityData!.creditDebitAmount.validate().toPriceFormat(),
-                                  style: boldTextStyle(color:  snap[index].activityData!.transactionType.isEmptyOrNull ? Colors.red:snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT) ? Colors.redAccent : Colors.green),
-                                ),
-                              ],
-                            ),
-                            2.height,
                           ],
                         ).expand(),
+                        16.width,
+                        Text(
+                          snap[index].activityData!.creditDebitAmount.validate().toPriceFormat(),
+                          style: boldTextStyle(
+                              color: snap[index].activityData!.transactionType.isEmptyOrNull
+                                  ? Colors.red
+                                  : snap[index].activityData!.transactionType!.toLowerCase().contains(PAYMENT_STATUS_DEBIT)
+                                      ? Colors.redAccent
+                                      : Colors.green),
+                        ),
                       ],
                     ),
                   );
@@ -163,7 +173,7 @@ class WalletHistoryScreenState extends State<WalletHistoryScreen> {
                 setState(() {});
               }
             },
-             onSwipeRefresh: () async {
+            onSwipeRefresh: () async {
               page = 1;
               init();
               setState(() {});

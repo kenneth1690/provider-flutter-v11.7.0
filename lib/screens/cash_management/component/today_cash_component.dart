@@ -6,15 +6,15 @@ import 'package:handyman_provider_flutter/utils/images.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 class TodayCashComponent extends StatelessWidget {
-  final num todayCashAmount;
+  final num totalCashInHand;
 
-  const TodayCashComponent({Key? key, required this.todayCashAmount}) : super(key: key);
+  const TodayCashComponent({Key? key, required this.totalCashInHand}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        CashBalanceDetailScreen().launch(context);
+        CashBalanceDetailScreen(totalCashInHand: totalCashInHand).launch(context);
       },
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -30,9 +30,9 @@ class TodayCashComponent extends StatelessWidget {
                   child: Image.asset(un_fill_wallet, color: Colors.white, height: 24),
                 ),
                 16.width,
-                Text(languages.todaySEarning, style: boldTextStyle()).expand(),
+                Text(languages.totalCash, style: boldTextStyle()).expand(),
                 16.width,
-                PriceWidget(price: todayCashAmount, color: appStore.isDarkMode ? Colors.white : context.primaryColor),
+                PriceWidget(price: totalCashInHand, color: appStore.isDarkMode ? Colors.white : context.primaryColor),
               ],
             ),
           ],

@@ -14,17 +14,20 @@ class HandymanDashBoardResponse {
   num? totalBooking;
   num? totalRevenue;
   num? todayCashAmount;
+  num? totalCashInHand;
   List<BookingData>? upcomingBookings;
   int? isHandymanAvailable;
   int? completedBooking;
   num? notificationUnreadCount;
   int? isEmailVerified;
+  num? remainingPayout;
 
   HandymanDashBoardResponse({
     this.isEmailVerified,
     this.commission,
     this.handymanReviews,
     this.status,
+    this.totalCashInHand,
     this.todayBooking,
     this.totalBooking,
     this.totalRevenue,
@@ -33,6 +36,7 @@ class HandymanDashBoardResponse {
     this.isHandymanAvailable,
     this.completedBooking,
     this.notificationUnreadCount,
+    this.remainingPayout,
   });
 
   HandymanDashBoardResponse.fromJson(Map<String, dynamic> json) {
@@ -41,6 +45,7 @@ class HandymanDashBoardResponse {
     status = json['status'];
     todayBooking = json['today_booking'];
     todayCashAmount = json['today_cash'];
+    totalCashInHand = json['total_cash_in_hand'];
     totalBooking = json['total_booking'];
     totalRevenue = json['total_revenue'];
     upcomingBookings = json['upcomming_booking'] != null ? (json['upcomming_booking'] as List).map((i) => BookingData.fromJson(i)).toList() : null;
@@ -49,7 +54,7 @@ class HandymanDashBoardResponse {
     completedBooking = json['completed_booking'];
 
     Iterable it = json['monthly_revenue']['revenueData'];
-
+    chartData = [];
     it.forEachIndexed((element, index) {
       if ((element as Map).containsKey('${index + 1}')) {
         chartData.add(RevenueChartData(month: months[index], revenue: element[(index + 1).toString()].toString().toDouble()));
@@ -60,6 +65,7 @@ class HandymanDashBoardResponse {
     notificationUnreadCount = json['notification_unread_count'];
 
     isEmailVerified = json['is_email_verified'];
+    remainingPayout = json['remaining_payout'];
   }
 
   Map<String, dynamic> toJson() {
@@ -85,13 +91,15 @@ class HandymanDashBoardResponse {
     data['notification_unread_count'] = this.notificationUnreadCount;
 
     data['today_cash'] = this.todayCashAmount;
+    data['total_cash_in_hand'] = this.totalCashInHand;
+    data['remaining_payout'] = this.remainingPayout;
 
     return data;
   }
 }
 
 class Commission {
-  int? commission;
+  num? commission;
   String? createdAt;
   String? deletedAt;
   int? id;

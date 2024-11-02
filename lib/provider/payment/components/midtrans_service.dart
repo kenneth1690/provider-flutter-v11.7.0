@@ -34,7 +34,7 @@ class MidtransService {
   Future midtransPaymentCheckout() async {
     //for android auto sandbox when debug and production when release
     midpay.init(
-      currentPaymentMethod.isTest == 1 ? currentPaymentMethod.testValue!.midtransClientId.validate() : currentPaymentMethod.liveValue!.midtransClientId.validate(), //TODO: check
+      currentPaymentMethod.isTest == 1 ? currentPaymentMethod.testValue!.midtransClientId.validate() : currentPaymentMethod.liveValue!.midtransClientId.validate(),
       currentPaymentMethod.isTest == 1 ? "https://app.sandbox.midtrans.com/snap/v1/transactions/" : 'https://app.midtrans.com/snap/v1/transactions/',
       environment: currentPaymentMethod.isTest == 1 ? Environment.sandbox : Environment.production,
     );
@@ -43,7 +43,7 @@ class MidtransService {
 
     List<MidtransItem> listitems = [];
 
-    var midtransTransaction = MidtransTransaction(totalAmount.toInt() /*100000*/, midtransCustomer, listitems, skipCustomer: true); //TODO: check
+    var midtransTransaction = MidtransTransaction(totalAmount.toInt() /*100000*/, midtransCustomer, listitems, skipCustomer: true);
 
     midpay.makePayment(midtransTransaction).catchError((err) => log("ERROR $err"));
 

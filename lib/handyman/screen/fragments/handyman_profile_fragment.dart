@@ -19,12 +19,14 @@ import 'package:handyman_provider_flutter/utils/colors.dart';
 import 'package:handyman_provider_flutter/utils/common.dart';
 import 'package:handyman_provider_flutter/utils/configs.dart';
 import 'package:handyman_provider_flutter/utils/constant.dart';
+import 'package:handyman_provider_flutter/utils/extensions/num_extenstions.dart';
 import 'package:handyman_provider_flutter/utils/extensions/string_extension.dart';
 import 'package:handyman_provider_flutter/utils/images.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../components/base_scaffold_widget.dart';
 import '../../../components/switch_push_notification_subscription_component.dart';
+import '../../../provider/wallet/wallet_history_screen.dart';
 
 class HandymanProfileFragment extends StatefulWidget {
   @override
@@ -44,6 +46,9 @@ class _HandymanProfileFragmentState extends State<HandymanProfileFragment> {
   void init() async {
     setStatusBarColor(primaryColor);
     isAvailable = appStore.handymanAvailability == 1 ? true : false;
+
+    /// get wallet balance api call
+    appStore.setUserWalletAmount();
   }
 
   @override
@@ -60,7 +65,13 @@ class _HandymanProfileFragmentState extends State<HandymanProfileFragment> {
             padding: EdgeInsets.only(top: context.statusBarHeight, bottom: 24),
             crossAxisAlignment: CrossAxisAlignment.start,
             listAnimationType: ListAnimationType.FadeIn,
+            physics: AlwaysScrollableScrollPhysics(),
             fadeInConfiguration: FadeInConfiguration(duration: 200.milliseconds),
+            onSwipeRefresh: () async {
+              init();
+              setState(() {});
+              return 1.seconds.delay;
+            },
             children: [
               Stack(
                 clipBehavior: Clip.none,
@@ -204,6 +215,22 @@ class _HandymanProfileFragmentState extends State<HandymanProfileFragment> {
                 ),
                 8.height,
               ],
+              16.height,
+              SettingItemWidget(
+                leading: ic_un_fill_wallet.iconImage(size: 16),
+                title: languages.walletBalance,
+                titleTextStyle: primaryTextStyle(),
+                onTap: () {
+                  if (appConfigurationStore.onlinePaymentStatus) {
+                    WalletHistoryScreen().launch(context);
+                  }
+                },
+                trailing: Text(
+                  appStore.userWalletAmount.toPriceFormat(),
+                  style: boldTextStyle(color: Colors.green),
+                ),
+              ),
+              Divider(height: 0, thickness: 1, indent: 15.0, endIndent: 15.0, color: context.dividerColor),
               SettingItemWidget(
                 leading: Image.asset(language, width: 16, color: context.iconColor),
                 title: languages.language,

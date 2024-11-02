@@ -36,7 +36,6 @@ import 'models/dashboard_response.dart';
 import 'models/extra_charges_model.dart';
 import 'models/handyman_dashboard_response.dart';
 import 'models/payment_list_reasponse.dart';
-import 'models/request_list_response.dart';
 import 'provider/timeSlots/timeSlotStore/time_slot_store.dart';
 import 'store/app_configuration_store.dart';
 import 'utils/firebase_messaging_utils.dart';
@@ -83,11 +82,11 @@ List<UserData>? cachedHandymanList;
 List<TotalData>? cachedTotalDataList;
 List<WalletHistory>? cachedWalletList;
 List<BankHistory>? cachedBankList;
-List<RequestListModel>? cachedRequestList;
 //endregion
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initialize();
 
   if (!isDesktop) {
     Firebase.initializeApp().then((value) {
@@ -103,7 +102,6 @@ void main() async {
     });
   }
  HttpOverrides.global = MyHttpOverrides();
-  await initialize();
 
   defaultSettings();
 

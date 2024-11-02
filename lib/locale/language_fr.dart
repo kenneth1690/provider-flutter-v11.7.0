@@ -366,13 +366,13 @@ class LanguageFr extends Languages {
   String get lblRateUs => "Évaluez nous";
 
   @override
-  String get lblTermsAndConditions => "Termes et conditions";
+  String get lblTermsAndConditions => 'Conditions générales';
 
   @override
   String get lblPrivacyPolicy => "Politique de confidentialité";
 
   @override
-  String get lblHelpAndSupport => "Aide et soutien";
+  String get lblHelpAndSupport => 'Aide et assistance';
 
   @override
   String get lblAbout => "Sur";
@@ -540,7 +540,7 @@ class LanguageFr extends Languages {
   String get lblDeleteAddress => "Supprimer l'adresse";
 
   @override
-  String get lblDeleteAddressMsg => "Êtes-vous sûr de vouloir supprimer cette adresse";
+  String get lblDeleteAddressMsg => 'Voulez-vous supprimer cette adresse ?';
 
   @override
   String get lblChoosePaymentMethod => "Choisissez le mode de paiement";
@@ -630,7 +630,7 @@ class LanguageFr extends Languages {
   String get lblEarningList => "Liste de gains";
 
   @override
-  String get lblSubscriptionTitle => "Êtes-vous sûr que vous voulez annuler le plan actuel?";
+  String get lblSubscriptionTitle => 'Vous souhaitez annuler le forfait actuel?';
 
   @override
   String get lblPlan => "Planifier";
@@ -681,7 +681,7 @@ class LanguageFr extends Languages {
   String get lblWallet => "Porte monnaie";
 
   @override
-  String get lblSelectUserType => "Sélectionner le type d'utilisateur";
+  String get lblSelectCommission => 'Sélectionnez les commissions';
 
   @override
   String get lblIAgree => "Porte monnaie";
@@ -774,10 +774,10 @@ class LanguageFr extends Languages {
   String get lblIsAvailableWouldYouLike => "est disponible. Voulez-vous mettre à jour?";
 
   @override
-  String get lblAreYouSureYouWantToAssignThisServiceTo => "Êtes-vous sûr de vouloir attribuer ce service à";
+  String lblAreYouSureYouWantToAssignThisServiceTo(String name) => "Do you want to assign this service to $name?";
 
   @override
-  String get lblAreYouSureYouWantToAssignToYourself => "Êtes-vous sûr de vouloir vous attribuer?";
+  String get lblAreYouSureYouWantToAssignToYourself => 'Voulez-vous vous attribuer?';
 
   @override
   String get lblAssignToMyself => "Attribuer à moi";
@@ -1071,7 +1071,7 @@ class LanguageFr extends Languages {
   String get packageService => 'Service de forfait';
 
   @override
-  String get confirmationRemovePackage => 'Êtes-vous sûr que vous souhaitez supprimer ce service du package?';
+  String get confirmationRemovePackage => 'Voulez-vous supprimer ce service du package?';
 
   @override
   String get packageName => 'Nom du paquet';
@@ -1167,7 +1167,7 @@ class LanguageFr extends Languages {
   String get lblNoTaxesFound => 'Pas de texs trouvés';
 
   @override
-  String get lblConfirmationForDeleteMsg => 'Êtes-vous sûr de vouloir supprimer le message';
+  String get lblConfirmationForDeleteMsg => 'Voulez-vous supprimer le message ?';
 
   @override
   String get lblImage => 'Image';
@@ -1218,7 +1218,7 @@ class LanguageFr extends Languages {
   String get views => 'Vues';
 
   @override
-  String get deleteBlogTitle => 'Êtes-vous sûr de vouloir supprimer ce blog?';
+  String get deleteBlogTitle => 'Voulez-vous supprimer ce blog?';
 
   @override
   String get enterBlogTitle => 'Entrez le titre de votre blog';
@@ -1248,7 +1248,7 @@ class LanguageFr extends Languages {
   String get published => 'Publié';
 
   @override
-  String get clearChatMessage => 'Êtes-vous sûr de vouloir effacer ce chat?';
+  String get clearChatMessage => 'Voulez-vous effacer cette discussion?';
 
   @override
   String get all => 'Tous';
@@ -1360,9 +1360,6 @@ class LanguageFr extends Languages {
 
   @override
   String get theService => 'le service';
-
-  @override
-  String get areYouSureYouWantTo => 'Êtes-vous sûr de vouloir';
 
   @override
   String get selectDuration => 'Sélectionner la durée';
@@ -1515,7 +1512,7 @@ class LanguageFr extends Languages {
   String get customDate => 'Date de personnalité';
 
   @override
-  String get totalCash => 'Total de trésorerie';
+  String get totalCash => 'Trésorerie totale en caisse';
 
   @override
   String get tomorrow => 'Demain';
@@ -1614,7 +1611,7 @@ class LanguageFr extends Languages {
   String get selectUserType => "Sélectionner le type d'utilisateur";
 
   @override
-  String get pleaseSelectUserType => "Veuillez sélectionner le type d'utilisateur";
+  String get pleaseSelectCommission => 'Veuillez sélectionner les commissions';
 
   @override
   String get copied => 'Copié';
@@ -1984,6 +1981,7 @@ class LanguageFr extends Languages {
 
   @override
   String get lastUpdatedAt => 'Dernière mise à jour à :';
+
   String get lblBankDetails => "Coordonnées bancaires";
 
   @override
@@ -2005,10 +2003,10 @@ class LanguageFr extends Languages {
   String get addBank => "Ajouter une banque";
 
   @override
-String get successful => 'Réussi';
+  String get successful => 'Réussi';
 
-@override
-String get yourWithdrawalRequestHasBeenSuccessfullySubmitted => 'Votre demande de retrait a été soumise avec succès.';
+  @override
+  String get yourWithdrawalRequestHasBeenSuccessfullySubmitted => 'Votre demande de retrait a été soumise avec succès.';
 
   @override
   String get done => "Fait";
@@ -2073,7 +2071,87 @@ String get yourWithdrawalRequestHasBeenSuccessfullySubmitted => 'Votre demande d
   @override
   String get fullNameOnBankAccount => 'Nom complet sur le compte bancaire';
 
-@override
-String get updateYourLocation => 'Mettez à jour votre emplacement';
+  @override
+  String get updateYourLocation => 'Mettez à jour votre emplacement';
 
+  @override
+  String get lbHours => "Heures";
+
+  @override
+  String get lbMinutes => "Minutes";
+
+  @override
+  String get handymanCommission => 'Commission de bricoleur';
+
+  @override
+  String get commission => 'Commission';
+
+  @override
+  String get noCommissionTypeListFound => 'Aucune liste de types de commission trouvée';
+
+  @override
+  String get typeName => 'Nom du type';
+
+  @override
+  String get addHandymanCommission => 'Ajouter une commission de bricoleur';
+
+  @override
+  String get editHandymanCommission => 'Modifier la commission du bricoleur';
+
+  @override
+  String get enterValidCommissionValue => 'Entrez une valeur de commission valide';
+
+  @override
+  String get percentage => 'Pourcentage';
+
+  @override
+  String get selectStatus => 'Sélectionnez le statut';
+
+  @override
+  String get youCanTUpdateDeleted => 'Vous ne pouvez pas mettre à jour les éléments supprimés';
+
+  @override
+  String get thisCommissionHasBeen => "Cette commission a été créée par l'administrateur";
+
+  @override
+  String get copyMessage => 'Copier le message';
+
+  @override
+  String get transactions => 'Transactions';
+
+  @override
+  String get thisYear => 'Cette année';
+
+  @override
+  String get thisMonth => 'Ce mois-ci';
+
+  @override
+  String get thisWeek => 'Cette semaine';
+
+  @override
+  String get providerList => 'Liste des fournisseurs';
+
+  @override
+  String get walletBalance => 'Solde du portefeuille';
+
+  @override
+  String get remainingPayout => 'Paiement restant';
+
+  @override
+  String get totalRevenue => 'Revenu total';
+
+  @override
+  String get totalActiveCount => "Nombre total d'actifs:";
+
+  @override
+  String get completedBookings => 'Réservations terminées';
+
+  @override
+  String get pickAProviderYou => 'Choisissez un fournisseur avec lequel vous souhaitez travailler';
+
+  @override
+  String get selectedProvider => 'Fournisseur sélectionné';
+
+  @override
+  String get youHavePermanentlyDenied => "Vous avez définitivement refusé l'autorisation de localisation. Veuillez autoriser le suivi de localisation en direct à partir de vos paramètres.";
 }

@@ -11,11 +11,11 @@ class ServiceFaqWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return ExpansionTile(
       title: Text(serviceFaq!.title.validate(), style: primaryTextStyle()),
-      tilePadding: EdgeInsets.zero,
+      tilePadding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       children: [
         ListTile(
           title: Text(serviceFaq!.description.validate(), style: secondaryTextStyle()),
-          contentPadding: EdgeInsets.only(bottom: 16),
+          contentPadding: EdgeInsets.only(left: 32),
         ),
       ],
     );

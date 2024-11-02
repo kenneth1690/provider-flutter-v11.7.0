@@ -41,7 +41,7 @@ class _AddReasonsComponentState extends State<AddReasonsComponent> {
           Container(
             width: context.width(),
             decoration: boxDecorationWithRoundedCorners(
-              borderRadius: BorderRadius.only(topLeft: Radius.circular(12), topRight: Radius.circular(12)),
+              borderRadius: BorderRadius.only(topLeft: Radius.circular(8), topRight: Radius.circular(8)),
               backgroundColor: primaryColor,
             ),
             padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),

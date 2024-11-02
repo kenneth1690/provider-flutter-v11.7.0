@@ -8,11 +8,13 @@ import 'package:handyman_provider_flutter/provider/handyman_list_screen.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../components/empty_error_state_widget.dart';
-
+//
 class HandymanListComponent extends StatelessWidget {
   final List<UserData> list;
+  final int totalActiveHandyman;
+  final VoidCallback onRefresh;
 
-  HandymanListComponent({required this.list});
+    HandymanListComponent({required this.list,required this.onRefresh, required this.totalActiveHandyman});
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +29,10 @@ class HandymanListComponent extends StatelessWidget {
         children: [
           ViewAllLabel(
             label: languages.handyman,
-            subLabel: languages.lblShowingOnly4Handyman,
+            subLabel: '${languages.totalActiveCount} ${totalActiveHandyman.toString()}',
             list: list,
             onTap: () {
-              HandymanListScreen().launch(context);
+              HandymanListScreen().launch(context).then((_) => onRefresh());
             },
           ),
           16.height,

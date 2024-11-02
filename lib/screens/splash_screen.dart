@@ -26,7 +26,10 @@ class SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     afterBuildCreated(() {
-      setStatusBarColor(Colors.transparent, statusBarBrightness: Brightness.dark, statusBarIconBrightness: appStore.isDarkMode ? Brightness.light : Brightness.dark);
+      setStatusBarColor(Colors.transparent,
+          statusBarBrightness: Brightness.dark,
+          statusBarIconBrightness:
+              appStore.isDarkMode ? Brightness.light : Brightness.dark);
 
       init();
     });
@@ -46,31 +49,51 @@ class SplashScreenState extends State<SplashScreen> {
       appNotSynced = true;
       setState(() {});
     } else {
-      appStore.setLanguage(getStringAsync(SELECTED_LANGUAGE_CODE, defaultValue: DEFAULT_LANGUAGE), context: context);
-
-      int themeModeIndex = getIntAsync(THEME_MODE_INDEX, defaultValue: THEME_MODE_SYSTEM);
+      appStore.setLanguage(
+          getStringAsync(SELECTED_LANGUAGE_CODE,
+              defaultValue: DEFAULT_LANGUAGE),
+          context: context);
+      int themeModeIndex =
+          getIntAsync(THEME_MODE_INDEX, defaultValue: THEME_MODE_SYSTEM);
       if (themeModeIndex == THEME_MODE_SYSTEM) {
-        appStore.setDarkMode(MediaQuery.of(context).platformBrightness == Brightness.dark);
+        appStore.setDarkMode(
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
       }
 
       if (appConfigurationStore.maintenanceModeStatus) {
-        MaintenanceModeScreen().launch(context, pageRouteAnimation: PageRouteAnimation.Fade);
+        MaintenanceModeScreen()
+            .launch(context, pageRouteAnimation: PageRouteAnimation.Fade);
       } else {
+      // Check if the user is unauthorized and logged in, then clear preferences and cached data.
+      // This condition occurs when the user is marked as inactive from the admin panel,
+      if (!appConfigurationStore.isUserAuthorized && appStore.isLoggedIn) {
+        await clearPreferences();
+      }
         if (!appStore.isLoggedIn) {
-          SignInScreen().launch(context, isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
+          SignInScreen().launch(context,
+              isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
         } else {
+          await updateProfilePhoto();
           if (isUserTypeProvider) {
             setStatusBarColor(primaryColor);
-            ProviderDashboardScreen(index: 0).launch(context, isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
+            ProviderDashboardScreen(index: 0).launch(context,
+                isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
           } else if (isUserTypeHandyman) {
             setStatusBarColor(primaryColor);
-            HandymanDashboardScreen(index: 0).launch(context, isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
+            HandymanDashboardScreen(index: 0).launch(context,
+                isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
           } else {
             SignInScreen().launch(context, isNewTask: true);
           }
         }
       }
     }
+  }
+
+  updateProfilePhoto() async {
+     getUserDetail(appStore.userId).then((value) async {
+      await appStore.setUserProfile(value.data!.profileImage.validate());
+    });
   }
 
   @override
@@ -101,7 +124,11 @@ class SplashScreenState extends State<SplashScreen> {
             children: [
               Image.asset(appLogo, height: 120, width: 120),
               32.height,
-              Text(APP_NAME, style: boldTextStyle(size: 26, color: appStore.isDarkMode ? Colors.white : Colors.black), textAlign: TextAlign.center),
+              Text(APP_NAME,
+                  style: boldTextStyle(
+                      size: 26,
+                      color: appStore.isDarkMode ? Colors.white : Colors.black),
+                  textAlign: TextAlign.center),
               16.height,
               if (appNotSynced)
                 Observer(

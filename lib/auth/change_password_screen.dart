@@ -93,6 +93,7 @@ class ChangePasswordScreenState extends State<ChangePasswordScreen> {
               height: context.height(),
               child: Form(
                 key: formKey,
+                autovalidateMode: AutovalidateMode.always,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -102,13 +103,14 @@ class ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       textFieldType: TextFieldType.PASSWORD,
                       controller: oldPasswordCont,
                       focus: oldPasswordFocus,
+                      isValidationRequired: true,
                       suffixPasswordVisibleWidget: ic_show.iconImage(size: 10).paddingAll(14),
                       suffixPasswordInvisibleWidget: ic_hide.iconImage(size: 10).paddingAll(14),
                       validator: (s) {
-                        if (s!.isEmpty)
+                        if (s != null && s.isEmpty) {
                           return languages.hintRequired;
-                        else
-                          return null;
+                        }
+                        return null;
                       },
                       nextFocus: newPasswordFocus,
                       decoration: inputDecoration(context, hint: languages.hintOldPasswordTxt),
@@ -118,13 +120,12 @@ class ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       textFieldType: TextFieldType.PASSWORD,
                       controller: newPasswordCont,
                       focus: newPasswordFocus,
+                      isValidationRequired: true,
                       suffixPasswordVisibleWidget: ic_show.iconImage(size: 10).paddingAll(14),
                       suffixPasswordInvisibleWidget: ic_hide.iconImage(size: 10).paddingAll(14),
                       validator: (s) {
-                        if (s!.isEmpty)
-                          return languages.hintRequired;
-                        else
-                          return null;
+                        if (s != null && s.isEmpty) return languages.hintRequired;
+                        return null;
                       },
                       nextFocus: reenterPasswordFocus,
                       decoration: inputDecoration(context, hint: languages.hintNewPasswordTxt),
@@ -133,6 +134,7 @@ class ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     AppTextField(
                       textFieldType: TextFieldType.PASSWORD,
                       controller: reenterPasswordCont,
+                      isValidationRequired: true,
                       focus: reenterPasswordFocus,
                       suffixPasswordVisibleWidget: ic_show.iconImage(size: 10).paddingAll(14),
                       suffixPasswordInvisibleWidget: ic_hide.iconImage(size: 10).paddingAll(14),

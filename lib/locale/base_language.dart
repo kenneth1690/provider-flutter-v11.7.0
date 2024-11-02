@@ -455,7 +455,7 @@ abstract class Languages {
 
   String get lblWallet;
 
-  String get lblSelectUserType;
+  String get lblSelectCommission;
 
   String get lblIAgree;
 
@@ -517,7 +517,7 @@ abstract class Languages {
 
   String get lblIsAvailableWouldYouLike;
 
-  String get lblAreYouSureYouWantToAssignThisServiceTo;
+  String lblAreYouSureYouWantToAssignThisServiceTo(String name);
 
   String get lblAreYouSureYouWantToAssignToYourself;
 
@@ -909,8 +909,6 @@ abstract class Languages {
 
   String get theService;
 
-  String get areYouSureYouWantTo;
-
   String get selectDuration;
 
   String get thisServiceMayTake;
@@ -1077,7 +1075,7 @@ abstract class Languages {
 
   String get selectUserType;
 
-  String get pleaseSelectUserType;
+  String get pleaseSelectCommission;
 
   String get copied;
 
@@ -1380,6 +1378,60 @@ abstract class Languages {
   String get credit;
 
   String get fullNameOnBankAccount;
-  
+
   String get updateYourLocation;
+
+  String get lbHours;
+
+  String get lbMinutes;
+
+  String get handymanCommission;
+
+  String get commission;
+
+  String get noCommissionTypeListFound;
+
+  String get typeName;
+
+  String get addHandymanCommission;
+
+  String get editHandymanCommission;
+
+  String get enterValidCommissionValue;
+
+  String get percentage;
+
+  String get selectStatus;
+
+  String get youCanTUpdateDeleted;
+
+  String get thisCommissionHasBeen;
+
+  String get copyMessage;
+
+  String get transactions;
+
+  String get thisYear;
+
+  String get thisMonth;
+
+  String get thisWeek;
+
+  String get providerList;
+
+  String get walletBalance;
+
+  String get remainingPayout;
+
+  String get totalRevenue;
+
+  String get totalActiveCount;
+
+  String get completedBookings;
+
+  String get pickAProviderYou;
+
+  String get selectedProvider;
+
+  String get youHavePermanentlyDenied;
 }

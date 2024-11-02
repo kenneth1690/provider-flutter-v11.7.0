@@ -365,13 +365,13 @@ class LanguageAr extends Languages {
   String get lblRateUs => "قيمنا";
 
   @override
-  String get lblTermsAndConditions => "الأحكام والشروط";
+  String get lblTermsAndConditions => 'الشروط والأحكام';
 
   @override
   String get lblPrivacyPolicy => "سياسة الخصوصية";
 
   @override
-  String get lblHelpAndSupport => "مساعدة و دعم";
+  String get lblHelpAndSupport => 'المساعدة والدعم';
 
   @override
   String get lblAbout => "عن";
@@ -539,7 +539,7 @@ class LanguageAr extends Languages {
   String get lblDeleteAddress => "حذف العنوان";
 
   @override
-  String get lblDeleteAddressMsg => "هل أنت متأكد أنك تريد حذف هذا العنوان";
+  String get lblDeleteAddressMsg => 'هل تريد حذف هذا العنوان؟';
 
   @override
   String get lblChoosePaymentMethod => "اختر وسيلة الدفع";
@@ -629,7 +629,7 @@ class LanguageAr extends Languages {
   String get lblEarningList => "قائمة الارباح";
 
   @override
-  String get lblSubscriptionTitle => "هل تريد بالتأكيد إلغاء الخطة الحالية؟";
+  String get lblSubscriptionTitle => 'هل تريد إلغاء الخطة الحالية؟';
 
   @override
   String get lblPlan => "حزمة";
@@ -680,7 +680,7 @@ class LanguageAr extends Languages {
   String get lblWallet => "محفظة";
 
   @override
-  String get lblSelectUserType => 'حدد نوع المستخدم';
+  String get lblSelectCommission => 'حدد العمولة';
 
   @override
   String get lblIAgree => "محفظة";
@@ -773,10 +773,10 @@ class LanguageAr extends Languages {
   String get lblIsAvailableWouldYouLike => "متاح. هل ترغب في تحديث؟";
 
   @override
-  String get lblAreYouSureYouWantToAssignThisServiceTo => "هل أنت متأكد أنك تريد تعيين هذه الخدمة";
+  String lblAreYouSureYouWantToAssignThisServiceTo(String name) => "Do you want to assign this service to $name?";
 
   @override
-  String get lblAreYouSureYouWantToAssignToYourself => "هل أنت متأكد من انك تريد تعيين هذه الخدمة لنفسك؟";
+  String get lblAreYouSureYouWantToAssignToYourself => 'هل تريد أن تسند لنفسك؟';
 
   @override
   String get lblAssignToMyself => "تعيين لنفسي";
@@ -1166,7 +1166,7 @@ class LanguageAr extends Languages {
   String get lblNoTaxesFound => 'لم يتم العثور على ضرائب';
 
   @override
-  String get lblConfirmationForDeleteMsg => 'هل أنت متأكد أنك تريد حذف الرسالة؟';
+  String get lblConfirmationForDeleteMsg => 'هل تريد حذف الرسالة؟';
 
   @override
   String get lblImage => 'صورة';
@@ -1217,7 +1217,7 @@ class LanguageAr extends Languages {
   String get views => 'الآراء';
 
   @override
-  String get deleteBlogTitle => 'هل أنت متأكد من حذف هذه المدونة؟';
+  String get deleteBlogTitle => 'هل تريد حذف هذه المدونة؟';
 
   @override
   String get enterBlogTitle => 'أدخل عنوان مدونتك';
@@ -1247,7 +1247,7 @@ class LanguageAr extends Languages {
   String get published => 'تم النشر';
 
   @override
-  String get clearChatMessage => 'هل أنت متأكد أنك تريد مسح هذه الدردشة؟';
+  String get clearChatMessage => 'هل تريد مسح هذه الدردشة؟';
 
   @override
   String get all => 'الجميع';
@@ -1359,9 +1359,6 @@ class LanguageAr extends Languages {
 
   @override
   String get theService => 'الخدمة';
-
-  @override
-  String get areYouSureYouWantTo => 'هل أنت متأكد أنك تريد';
 
   @override
   String get selectDuration => 'حدد المدة';
@@ -1514,7 +1511,7 @@ class LanguageAr extends Languages {
   String get customDate => 'موعد مخصص';
 
   @override
-  String get totalCash => 'مجموع المبالغ النقدية';
+  String get totalCash => 'إجمالي النقد في متناول اليد';
 
   @override
   String get tomorrow => 'غداً';
@@ -1613,7 +1610,7 @@ class LanguageAr extends Languages {
   String get selectUserType => 'حدد نوع المستخدم';
 
   @override
-  String get pleaseSelectUserType => 'الرجاء تحديد نوع المستخدم';
+  String get pleaseSelectCommission => 'الرجاء تحديد العمولة';
 
   @override
   String get copied => 'نسخ';
@@ -1632,8 +1629,10 @@ class LanguageAr extends Languages {
 
   @override
   String get youAreNotConnectedWithChatServer => 'الاتصال بخادم الدردشة';
+
   @override
   String get tapBelowButtonToConnectWithOurChatServer => 'أنت غير متصل بخادم الدردشة. اضغط على الزر أدناه للاتصال وبدء الدردشة';
+
   // @override
   // String get youAreNotConnectedWithChatServer => 'أنت غير متصل بخادم الدردشة';
 
@@ -1982,6 +1981,7 @@ class LanguageAr extends Languages {
 
   @override
   String get lastUpdatedAt => 'अंतिम बार अद्यतन किया गया:';
+
   String get lblBankDetails => "التفاصيل المصرفية";
 
   @override
@@ -2002,11 +2002,11 @@ class LanguageAr extends Languages {
   @override
   String get addBank => "أضف البنك";
 
-@override
-String get successful => 'ناجح';
+  @override
+  String get successful => 'ناجح';
 
-@override
-String get yourWithdrawalRequestHasBeenSuccessfullySubmitted => 'لقد تم إرسال طلب السحب الخاص بك بنجاح.';
+  @override
+  String get yourWithdrawalRequestHasBeenSuccessfullySubmitted => 'لقد تم إرسال طلب السحب الخاص بك بنجاح.';
 
   @override
   String get done => "منتهي";
@@ -2068,9 +2068,90 @@ String get yourWithdrawalRequestHasBeenSuccessfullySubmitted => 'لقد تم إ�
   @override
   String get credit => 'ائتمان';
 
- @override
-String get fullNameOnBankAccount => 'الاسم الكامل على الحساب البنكي';
+  @override
+  String get fullNameOnBankAccount => 'الاسم الكامل على الحساب البنكي';
 
-@override
-String get updateYourLocation => 'قم بتحديث موقعك';
+  @override
+  String get updateYourLocation => 'قم بتحديث موقعك';
+
+  @override
+  String get lbHours => "ساعات";
+
+  @override
+  String get lbMinutes => "دقائق";
+
+  @override
+  String get handymanCommission => 'لجنة العامل الماهر';
+
+  @override
+  String get commission => 'عمولة';
+
+  @override
+  String get noCommissionTypeListFound => 'لم يتم العثور على قائمة نوع العمولة';
+
+  @override
+  String get typeName => 'اكتب الاسم';
+
+  @override
+  String get addHandymanCommission => 'إضافة لجنة العامل الماهر';
+
+  @override
+  String get editHandymanCommission => 'تحرير لجنة العامل الماهر';
+
+  @override
+  String get enterValidCommissionValue => 'أدخل قيمة العمولة الصالحة';
+
+  @override
+  String get percentage => 'نسبة مئوية';
+
+  @override
+  String get selectStatus => 'حدد الحالة';
+
+  @override
+  String get youCanTUpdateDeleted => 'لا يمكنك تحديث العناصر المحذوفة';
+
+  @override
+  String get thisCommissionHasBeen => 'تم إنشاء هذه اللجنة من قبل المشرف';
+
+  @override
+  String get copyMessage => 'نسخ الرسالة';
+
+  @override
+  String get transactions => 'المعاملات';
+
+  @override
+  String get thisYear => 'هذا العام';
+
+  @override
+  String get thisMonth => 'هذا الشهر';
+
+  @override
+  String get thisWeek => 'هذا الاسبوع';
+
+  @override
+  String get providerList => 'قائمة مقدمي الخدمة';
+
+  @override
+  String get walletBalance => 'رصيد المحفظة';
+
+  @override
+  String get remainingPayout => 'الدفع المتبقي';
+
+  @override
+  String get totalRevenue => 'إجمالي الإيرادات';
+
+  @override
+  String get totalActiveCount => 'إجمالي عدد النشطين:';
+
+  @override
+  String get completedBookings => 'الحجوزات المكتملة';
+
+  @override
+  String get pickAProviderYou => 'اختر المزود الذي ترغب في العمل معه';
+
+  @override
+  String get selectedProvider => 'المزود المختار';
+
+  @override
+  String get youHavePermanentlyDenied => 'لقد رفضت إذن تحديد الموقع بشكل دائم، يرجى السماح بتتبع الموقع المباشر من إعداداتك';
 }

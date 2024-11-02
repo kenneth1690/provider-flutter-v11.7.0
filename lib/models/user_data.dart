@@ -44,7 +44,9 @@ class UserData {
   String? providerType;
   bool? isHandymanAvailable;
   String? loginType;
+  int? handymanCommissionId;
   String? handymanType;
+  String? handymanCommission;
   num? slotsForAllServices;
   int? isOnline;
   List<String>? userRole;
@@ -140,6 +142,8 @@ class UserData {
     this.cityName,
     this.providerType,
     this.handymanType,
+    this.handymanCommissionId,
+    this.handymanCommission,
     this.isHandymanAvailable,
     this.loginType,
     this.isEmailVerified,
@@ -186,7 +190,9 @@ class UserData {
     designation = json['designation'];
     cityName = json['city_name'];
     providerType = json['providertype'];
-    handymanType = json['handymantype'];
+    handymanCommissionId = json['handymantype_id'];
+    handymanType = json['handyman_type'];
+    handymanCommission = json['handyman_commission'];
     isHandymanAvailable = json['isHandymanAvailable'] != null ? json['isHandymanAvailable'] == 1 : false;
     loginType = json['login_type'];
     isEmailVerified = json['is_email_verified'];
@@ -208,7 +214,8 @@ class UserData {
     if (this.contactNumber != null) data['contact_number'] = this.contactNumber;
     if (this.countryId != null) data['country_id'] = this.countryId;
     if (this.isOnline != null) data['isOnline'] = this.isOnline;
-    if (this.handymanType != null) data['handymantype'] = this.handymanType;
+    if (this.handymanType != null) data['handyman_type'] = this.handymanType;
+    if (this.handymanCommission != null) data['handyman_commission'] = this.handymanCommission;
     if (this.stateId != null) data['state_id'] = this.stateId;
     if (this.cityId != null) data['city_id'] = this.cityId;
     if (this.address != null) data['address'] = this.address;
@@ -233,6 +240,7 @@ class UserData {
     if (this.uid != null) data['uid'] = this.uid;
     if (this.isSubscribe != null) data['is_subscribe'] = this.isSubscribe;
     if (this.cityName != null) data['city_name'] = this.cityName;
+    if (this.handymanCommissionId != null) data['handymantype_id'] = this.handymanCommissionId;
     if (this.providerType != null) data['providertype'] = this.providerType;
     if (this.isHandymanAvailable != null) data['isHandymanAvailable'] = this.isHandymanAvailable;
     if (this.loginType != null) data['login_type'] = this.loginType;

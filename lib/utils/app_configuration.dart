@@ -42,6 +42,7 @@ Future<void> setAppConfigurations(AppConfigurationModel data) async {
   await appConfigurationStore.setEnableUserWallet(data.walletStatus.validate().getBoolInt());
   await appConfigurationStore.setBlogStatus(data.blogStatus.validate().getBoolInt());
   await appConfigurationStore.setAutoAssignStatus(data.autoAssignStatus.validate().getBoolInt());
+  await appConfigurationStore.setISUserAuthorized(data.isUserAuthorized ??  false);
 
   await appConfigurationStore.setPrivacyPolicy(data.privacyPolicy ?? PRIVACY_POLICY_URL);
   await appConfigurationStore.setTermConditions(data.termsConditions ?? TERMS_CONDITION_URL);
@@ -113,6 +114,7 @@ const JOB_REQUEST_SERVICE_STATUS = 'JOB_REQUEST_SERVICE_STATUS';
 const CHAT_GPT_STATUS = 'CHAT_GPT_STATUS';
 const TEST_CHAT_GPT_WITHOUT_KEY = 'TEST_CHAT_GPT_WITHOUT_KEY';
 const IS_ADVANCE_PAYMENT_ALLOWED = 'IS_ADVANCE_PAYMENT_ALLOWED';
+const IS_USER_AUTHORIZED = 'IS_USER_AUTHORIZED';
 
 const CUSTOMER_APP_STORE_URL = 'APPSTORE_URL';
 const CUSTOMER_PLAY_STORE_URL = 'PLAY_STORE_URL';
@@ -151,6 +153,7 @@ class AppConfigurationModel {
   String? timeZone;
   String? distanceType;
   String? radius;
+  bool? isUserAuthorized;
   String? playStoreUrl;
   String? appstoreUrl;
   String? providerAppstoreUrl;
@@ -207,6 +210,7 @@ class AppConfigurationModel {
         timeZone = map["time_zone"],
         distanceType = map["distance_type"],
         radius = map["radius"],
+        isUserAuthorized = map["is_user_authorized"],
         playStoreUrl = map["playstore_url"],
         appstoreUrl = map["appstore_url"],
         providerAppstoreUrl = map["provider_appstore_url"],
@@ -264,6 +268,7 @@ class AppConfigurationModel {
     data['time_zone'] = timeZone;
     data['distance_type'] = distanceType;
     data['radius'] = radius;
+    data['is_user_authorized'] = isUserAuthorized;
     data['playstore_url'] = playStoreUrl;
     data['appstore_url'] = appstoreUrl;
     data['provider_appstore_url'] = providerAppstoreUrl;

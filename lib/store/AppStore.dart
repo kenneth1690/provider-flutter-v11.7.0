@@ -10,6 +10,7 @@ import 'package:mobx/mobx.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../models/service_model.dart';
+import '../networks/rest_apis.dart';
 
 part 'AppStore.g.dart';
 
@@ -138,6 +139,18 @@ abstract class _AppStore with Store {
 
   @observable
   bool is24HourFormat = getBoolAsync(HOUR_FORMAT_STATUS);
+
+  @observable
+  num userWalletAmount = 0.0;
+
+  @action
+  Future<void> setUserWalletAmount() async {
+    if (isLoggedIn) {
+      userWalletAmount = await getUserWalletBalance();
+    } else {
+      userWalletAmount = 0.0;
+    }
+  }
 
   @action
   void setTotalHandyman(int val) {

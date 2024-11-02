@@ -25,9 +25,9 @@ class SignInScreen extends StatefulWidget {
 }
 
 class _SignInScreenState extends State<SignInScreen> {
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  //-------------------------------- Variables -------------------------------//
 
-  /// Text Field Controller
+  /// TextEditing controller
   TextEditingController emailCont = TextEditingController();
   TextEditingController passwordCont = TextEditingController();
 
@@ -35,12 +35,27 @@ class _SignInScreenState extends State<SignInScreen> {
   FocusNode emailFocus = FocusNode();
   FocusNode passwordFocus = FocusNode();
 
+  /// FormKey
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+
+  /// AutoValidate mode
+  AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
+
   bool isRemember = getBoolAsync(IS_REMEMBERED);
 
   @override
   void initState() {
     super.initState();
     init();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    emailCont.dispose();
+    passwordCont.dispose();
+    passwordFocus.dispose();
+    emailFocus.dispose();
   }
 
   void init() async {
@@ -51,8 +66,107 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
+  //------------------------------------ UI ----------------------------------//
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: Scaffold(
+        body: SizedBox(
+          height: context.height(),
+          width: context.width(),
+          child: Stack(
+            children: [
+              Form(
+                key: formKey,
+                autovalidateMode: autovalidateMode,
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: AppBar().preferredSize.height),
+                      // Hello again with Welcome text
+                      _buildHelloAgainWithWelcomeText(),
+
+                      AutofillGroup(
+                        onDisposeAction: AutofillContextAction.commit,
+                        child: Column(
+                          children: [
+                            // Enter email text field.
+                            AppTextField(
+                              textFieldType: TextFieldType.EMAIL_ENHANCED,
+                              controller: emailCont,
+                              focus: emailFocus,
+                              nextFocus: passwordFocus,
+                              errorThisFieldRequired: languages.hintRequired,
+                              decoration: inputDecoration(context, hint: languages.hintEmailAddressTxt),
+                              suffix: ic_message.iconImage(size: 10).paddingAll(14),
+                              autoFillHints: [AutofillHints.email],
+                              onFieldSubmitted: (val) => FocusScope.of(context).requestFocus(passwordFocus),
+                            ),
+                            16.height,
+                            // Enter password text field
+                            AppTextField(
+                              textFieldType: TextFieldType.PASSWORD,
+                              controller: passwordCont,
+                              focus: passwordFocus,
+                              errorThisFieldRequired: languages.hintRequired,
+                              suffixPasswordVisibleWidget: ic_show.iconImage(size: 10).paddingAll(14),
+                              suffixPasswordInvisibleWidget: ic_hide.iconImage(size: 10).paddingAll(14),
+                              errorMinimumPasswordLength: "${languages.errorPasswordLength} $passwordLengthGlobal",
+                              decoration: inputDecoration(context, hint: languages.hintPassword),
+                              autoFillHints: [AutofillHints.password],
+                              onFieldSubmitted: (s) {
+                                _handleLogin();
+                              },
+                            ),
+                            8.height,
+                          ],
+                        ),
+                      ),
+
+                      _buildForgotRememberWidget(),
+                      _buildButtonWidget(),
+                      16.height,
+                      SnapHelperWidget<bool>(
+                        future: isIqonicProduct,
+                        onSuccess: (data) {
+                          if (data) {
+                            return UserDemoModeScreen(
+                              onChanged: (email, password) {
+                                if (email.isNotEmpty && password.isNotEmpty) {
+                                  emailCont.text = email;
+                                  passwordCont.text = password;
+                                } else {
+                                  emailCont.clear();
+                                  passwordCont.clear();
+                                }
+                              },
+                            );
+                          }
+                          return Offstage();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Observer(
+                builder: (_) => LoaderWidget().center().visible(appStore.isLoading),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   //region Widgets
-  Widget _buildTopWidget() {
+  Widget _buildHelloAgainWithWelcomeText() {
     return Column(
       children: [
         32.height,
@@ -215,95 +329,5 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   void setState(fn) {
     if (mounted) super.setState(fn);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBarWidget(
-        "",
-        elevation: 0,
-        showBack: false,
-        color: context.scaffoldBackgroundColor,
-        systemUiOverlayStyle: SystemUiOverlayStyle(statusBarIconBrightness: getStatusBrightness(val: appStore.isDarkMode), statusBarColor: context.scaffoldBackgroundColor),
-      ),
-      body: SizedBox(
-        width: context.width(),
-        child: Stack(
-          children: [
-            Form(
-              key: formKey,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTopWidget(),
-                    AutofillGroup(
-                      onDisposeAction: AutofillContextAction.commit,
-                      child: Column(
-                        children: [
-                          AppTextField(
-                            textFieldType: TextFieldType.EMAIL_ENHANCED,
-                            controller: emailCont,
-                            focus: emailFocus,
-                            nextFocus: passwordFocus,
-                            errorThisFieldRequired: languages.hintRequired,
-                            decoration: inputDecoration(context, hint: languages.hintEmailAddressTxt),
-                            suffix: ic_message.iconImage(size: 10).paddingAll(14),
-                            autoFillHints: [AutofillHints.email],
-                          ),
-                          16.height,
-                          AppTextField(
-                            textFieldType: TextFieldType.PASSWORD,
-                            controller: passwordCont,
-                            focus: passwordFocus,
-                            errorThisFieldRequired: languages.hintRequired,
-                            suffixPasswordVisibleWidget: ic_show.iconImage(size: 10).paddingAll(14),
-                            suffixPasswordInvisibleWidget: ic_hide.iconImage(size: 10).paddingAll(14),
-                            errorMinimumPasswordLength: "${languages.errorPasswordLength} $passwordLengthGlobal",
-                            decoration: inputDecoration(context, hint: languages.hintPassword),
-                            autoFillHints: [AutofillHints.password],
-                            onFieldSubmitted: (s) {
-                              _handleLogin();
-                            },
-                          ),
-                          8.height,
-                        ],
-                      ),
-                    ),
-                    _buildForgotRememberWidget(),
-                    _buildButtonWidget(),
-                    16.height,
-                    SnapHelperWidget<bool>(
-                      future: isIqonicProduct,
-                      onSuccess: (data) {
-                        if (data) {
-                          return UserDemoModeScreen(
-                            onChanged: (email, password) {
-                              if (email.isNotEmpty && password.isNotEmpty) {
-                                emailCont.text = email;
-                                passwordCont.text = password;
-                              } else {
-                                emailCont.clear();
-                                passwordCont.clear();
-                              }
-                            },
-                          );
-                        }
-                        return Offstage();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Observer(
-              builder: (_) => LoaderWidget().center().visible(appStore.isLoading),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

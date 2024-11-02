@@ -158,7 +158,7 @@ class _ChatItemWidgetState extends State<ChatItemWidget> {
                 children: [
                   if (widget.chatItemData.messageType == MessageType.TEXT.name)
                     SettingItemWidget(
-                      title: 'Copy Message', //TODO translate
+                      title: languages.copyMessage,
                       onTap: () {
                         finish(context, 1);
                       },

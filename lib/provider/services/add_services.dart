@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:handyman_provider_flutter/components/app_widgets.dart';
 import 'package:handyman_provider_flutter/components/back_widget.dart';
@@ -44,6 +45,8 @@ class _AddServicesState extends State<AddServices> {
   TextEditingController durationContHr = TextEditingController();
   TextEditingController durationContMin = TextEditingController();
   TextEditingController prePayAmountController = TextEditingController();
+  TextEditingController hoursCont = TextEditingController();
+  TextEditingController miutesCont = TextEditingController();
 
   /// FocusNode
   FocusNode serviceNameFocus = FocusNode();
@@ -54,10 +57,14 @@ class _AddServicesState extends State<AddServices> {
   FocusNode durationMinFocus = FocusNode();
   FocusNode prePayAmountFocus = FocusNode();
 
+  FocusNode hoursFocus = FocusNode();
+  FocusNode minutesFocus = FocusNode();
+
   String serviceType = SERVICE_TYPE_FIXED;
   String serviceStatus = ACTIVE;
   int? categoryId = -1;
   int? subCategoryId = -1;
+
   TimeOfDay? currentTime;
 
   bool isUpdate = false;
@@ -120,7 +127,8 @@ class _AddServicesState extends State<AddServices> {
         serviceStatusModel = statusListStaticData[1];
       }
       currentTime = TimeOfDay(hour: widget.data!.duration.validate().splitBefore(':').toInt(), minute: widget.data!.duration.validate().splitAfter(':').toInt());
-      durationContHr.text = "${currentTime!.hour}:${currentTime!.minute}";
+      durationContHr.text = "${currentTime!.hour}";
+      durationContMin.text = "${currentTime!.minute}";
       isTimeSlotAvailable = widget.data!.isSlot.validate() == 1 ? true : false;
       //isAdvancePaymentAllowedBySystem = widget.data!.isAdvancePaymentSetting;
       isAdvancePayment = widget.data!.isAdvancePayment;
@@ -164,6 +172,7 @@ class _AddServicesState extends State<AddServices> {
         AddServiceKey.status: serviceStatus.validate() == ACTIVE ? '1' : '0',
         AddServiceKey.duration: "${currentTime!.hour}:${currentTime!.minute}",
         AddServiceKey.visitType: selectedVisitType!.key,
+        AdvancePaymentKey.isEnableAdvancePayment: isAdvancePayment ? 1 : 0
       };
 
       if (subCategoryId != -1) {
@@ -174,7 +183,6 @@ class _AddServicesState extends State<AddServices> {
         req.putIfAbsent(AddServiceKey.id, () => widget.data!.id.validate());
       }
       if (isAdvancePaymentAllowedBySystem && isAdvancePayment) {
-        req.putIfAbsent(AdvancePaymentKey.isEnableAdvancePayment, () => isAdvancePayment ? 1 : 0);
         req.putIfAbsent(AdvancePaymentKey.advancePaymentAmount, () => prePayAmountController.text.validate().toDouble());
       }
       log("Service Add Request: $req");
@@ -348,38 +356,59 @@ class _AddServicesState extends State<AddServices> {
                   isValidationRequired: serviceType != SERVICE_TYPE_FREE,
                   validator: (s) {
                     int discount = int.tryParse(s.validate()).validate();
-                    if ((discount < 0 || discount >= 100)) return languages.valueConditionMessage;
-                    else return null;
+                    if ((discount < 0 || discount >= 100))
+                      return languages.valueConditionMessage;
+                    else
+                      return null;
                   },
                   keyboardType: TextInputType.numberWithOptions(decimal: true),
                 ).expand(),
               ],
             ),
-            AppTextField(
-              textFieldType: TextFieldType.PHONE,
-              controller: durationContHr,
-              focus: durationHrFocus,
-              nextFocus: durationMinFocus,
-              maxLength: 2,
-              readOnly: true,
-              onTap: () async {
-                currentTime = await showTimePicker(
-                  context: context,
-                  initialTime: currentTime ?? TimeOfDay.now(),
-                  helpText: languages.selectDuration,
-                );
-
-                if (currentTime != null) {
-                  durationContHr.text = "${languages.thisServiceMayTake} ${currentTime!.hour}:${currentTime!.minute} ${languages.hour}";
-                }
-              },
-              errorThisFieldRequired: languages.hintRequired,
-              decoration: inputDecoration(
-                context,
-                hint: languages.lblDurationHr,
-                fillColor: context.scaffoldBackgroundColor,
-                counterText: '',
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    textFieldType: TextFieldType.PHONE,
+                    controller: durationContHr,
+                    focus: durationHrFocus,
+                    nextFocus: durationMinFocus,
+                    maxLength: 3,
+                    inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (value) {
+                      currentTime = TimeOfDay(hour: int.parse(value), minute: int.parse(durationContMin.text.isEmpty ? "0" : durationContMin.text.toString()));
+                    },
+                    errorThisFieldRequired: languages.hintRequired,
+                    decoration: inputDecoration(
+                      context,
+                      hint: languages.lblDurationHr,
+                      fillColor: context.scaffoldBackgroundColor,
+                      counterText: '',
+                    ),
+                  ),
+                ),
+                10.width,
+                Expanded(
+                  child: AppTextField(
+                    textFieldType: TextFieldType.PHONE,
+                    controller: durationContMin,
+                    focus: durationMinFocus,
+                    nextFocus: descriptionFocus,
+                    inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
+                    maxLength: 2,
+                    onChanged: (value) {
+                      currentTime = TimeOfDay(hour: int.parse(durationContHr.text.isEmpty ? "0" : durationContHr.text.toString()), minute: int.parse(value));
+                    },
+                    errorThisFieldRequired: languages.hintRequired,
+                    decoration: inputDecoration(
+                      context,
+                      hint: languages.lblDurationMin,
+                      fillColor: context.scaffoldBackgroundColor,
+                      counterText: '',
+                    ),
+                  ),
+                ),
+              ],
             ),
             AppTextField(
               textFieldType: TextFieldType.MULTILINE,
@@ -586,6 +615,7 @@ class _AddServicesState extends State<AddServices> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: appBarWidget(
         isUpdate ? languages.lblEditService : languages.hintAddService,
         textColor: white,
@@ -593,72 +623,74 @@ class _AddServicesState extends State<AddServices> {
         backWidget: BackWidget(),
       ),
       body: Stack(
-        fit: StackFit.expand,
         children: [
-          SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 90),
-            child: Column(
-              children: [
-                CustomImagePicker(
-                  key: uniqueKey,
-                  onRemoveClick: (value) {
-                    if (tempAttachments.validate().isNotEmpty && imageFiles.isNotEmpty) {
-                      showConfirmDialogCustom(
-                        context,
-                        dialogType: DialogType.DELETE,
-                        positiveText: languages.lblDelete,
-                        negativeText: languages.lblCancel,
-                        onAccept: (p0) {
-                          imageFiles.removeWhere((element) => element.path == value);
-                          if (value.startsWith('http')) {
-                            removeAttachment(id: tempAttachments.validate().firstWhere((element) => element.url == value).id.validate());
+          Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Column(
+                    children: [
+                      CustomImagePicker(
+                        key: uniqueKey,
+                        onRemoveClick: (value) {
+                          if (tempAttachments.validate().isNotEmpty && imageFiles.isNotEmpty) {
+                            showConfirmDialogCustom(
+                              context,
+                              dialogType: DialogType.DELETE,
+                              positiveText: languages.lblDelete,
+                              negativeText: languages.lblCancel,
+                              onAccept: (p0) {
+                                imageFiles.removeWhere((element) => element.path == value);
+                                if (value.startsWith('http')) {
+                                  removeAttachment(id: tempAttachments.validate().firstWhere((element) => element.url == value).id.validate());
+                                }
+                              },
+                            );
+                          } else {
+                            showConfirmDialogCustom(
+                              context,
+                              dialogType: DialogType.DELETE,
+                              positiveText: languages.lblDelete,
+                              negativeText: languages.lblCancel,
+                              onAccept: (p0) {
+                                imageFiles.removeWhere((element) => element.path == value);
+                                if (isUpdate) {
+                                  uniqueKey = UniqueKey();
+                                }
+                                setState(() {});
+                              },
+                            );
                           }
                         },
-                      );
-                    } else {
-                      showConfirmDialogCustom(
-                        context,
-                        dialogType: DialogType.DELETE,
-                        positiveText: languages.lblDelete,
-                        negativeText: languages.lblCancel,
-                        onAccept: (p0) {
-                          imageFiles.removeWhere((element) => element.path == value);
-                          if (isUpdate) {
-                            uniqueKey = UniqueKey();
-                          }
+                        selectedImages: widget.data != null ? imageFiles.validate().map((e) => e.path.validate()).toList() : null,
+                        onFileSelected: (List<File> files) async {
+                          imageFiles = files;
                           setState(() {});
                         },
-                      );
-                    }
-                  },
-                  selectedImages: widget.data != null ? imageFiles.validate().map((e) => e.path.validate()).toList() : null,
-                  onFileSelected: (List<File> files) async {
-                    imageFiles = files;
-                    setState(() {});
-                  },
+                      ),
+                      buildFormWidget(),
+                    ],
+                  ),
                 ),
-                buildFormWidget(),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 16,
-            left: 16,
-            bottom: 16,
-            child: AppButton(
-              text: languages.btnSave,
-              height: 40,
-              color: primaryColor,
-              textStyle: boldTextStyle(color: white),
-              width: context.width() - context.navigationBarHeight,
-              onTap: () {
-                /*ifNotTester(context, () {
-                  checkValidation();
-                });*/
-                checkValidation();
-              },
-            ),
-          ),
+              ),
+              Observer(
+                builder: (_) => AppButton(
+                  margin: EdgeInsets.only(bottom: 12),
+                  text: languages.btnSave,
+                  height: 40,
+                  color: appStore.isLoading ? primaryColor.withOpacity(0.5) : primaryColor,
+                  textStyle: boldTextStyle(color: white),
+                  width: context.width() - context.navigationBarHeight,
+                  onTap: appStore.isLoading
+                      ? () {}
+                      : () {
+                          checkValidation();
+                        },
+                ),
+              ),
+            ],
+          ).paddingOnly(left: 16.0, right: 16.0),
           Observer(builder: (_) => LoaderWidget().center().visible(appStore.isLoading)),
         ],
       ),

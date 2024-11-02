@@ -23,9 +23,7 @@ class TrackLocation extends StatefulWidget {
 }
 
 class _TrackLocationState extends State<TrackLocation> {
-  gmaps.CameraPosition _initialLocation = gmaps.CameraPosition(target: gmaps.LatLng(0.0, 0.0));
   late gmaps.GoogleMapController mapController;
-  gmaps.LatLng? _currentPosition;
   Set<gmaps.Marker> _markers = {};
   gmaps.BitmapDescriptor? customIcon;
   lottie.LottieComposition? _composition;
@@ -82,7 +80,7 @@ class _TrackLocationState extends State<TrackLocation> {
       isLoading = true;
     });
     getHandymanLocation(
-      widget.bookingId.toString(),
+      widget.bookingId,
     ).then((value) async {
       setState(() {
         handymanLocation = value;

@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:nb_utils/nb_utils.dart';
 
 import '../../../components/app_widgets.dart';
+import '../../../components/base_scaffold_widget.dart';
 import '../../../components/cached_image_widget.dart';
 import '../../../main.dart';
 import '../../../models/booking_detail_response.dart';
@@ -31,11 +32,14 @@ class AddAddonServiceScreen extends StatefulWidget {
 }
 
 class _AddAddonServiceScreenState extends State<AddAddonServiceScreen> {
+//-------------------------------- Variables -------------------------------//
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+  /// TextEditing controlle
   TextEditingController addonNameCont = TextEditingController();
   TextEditingController addonPriceCont = TextEditingController();
 
+  /// FocusNodes
   FocusNode addonPriceFocus = FocusNode();
 
   List<StaticDataModel> statusListStaticData = [
@@ -44,14 +48,10 @@ class _AddAddonServiceScreenState extends State<AddAddonServiceScreen> {
   ];
 
   StaticDataModel? addonStatusModel;
-
   File? imageFile;
   XFile? pickedFile;
-
   String addonStatus = ACTIVE;
-
   bool isUpdate = false;
-
   ServiceData? selectedService;
   List<ServiceData> serviceList = [];
   int? serviceId;
@@ -63,13 +63,19 @@ class _AddAddonServiceScreenState extends State<AddAddonServiceScreen> {
     init();
   }
 
+  @override
+  void dispose() {
+    super.dispose();
+    addonNameCont.dispose();
+    addonPriceCont.dispose();
+    addonPriceFocus.dispose();
+  }
+
   void init() async {
     isUpdate = widget.addonServiceData != null;
 
     if (isUpdate) {
-      appStore.selectedServiceList.clear();
       appStore.selectedServiceData = ServiceData();
-
       addonNameCont.text = widget.addonServiceData!.name.validate().trim();
       addonPriceCont.text = widget.addonServiceData!.price.toString().validate();
       addonStatus = widget.addonServiceData!.status.validate() == 1 ? ACTIVE : INACTIVE;
@@ -108,6 +114,118 @@ class _AddAddonServiceScreenState extends State<AddAddonServiceScreen> {
       imageFile = File(pickedFile!.path);
       setState(() {});
     }
+  }
+
+  //----------------------------------- UI -----------------------------------/
+  @override
+  Widget build(BuildContext context) {
+    return AppScaffold(
+      appBarTitle: isUpdate ? languages.editAddonService : languages.addAddonService, //TODO: check for all Scaffold change to AppScaffold
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 90),
+            child: Column(
+              children: [
+                (imageFile != null && imageFile!.path.isNotEmpty)
+                    ? Center(
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: 110,
+                              height: 110,
+                              child: LoaderWidget(),
+                            ).visible(imageFile!.path.isNotEmpty),
+                            CachedImageWidget(
+                              url: imageFile!.path,
+                              height: 110,
+                              width: 110,
+                              fit: BoxFit.cover,
+                            ).cornerRadiusWithClipRRect(defaultRadius),
+                            Positioned(
+                              top: 110 * 3 / 4 + 4,
+                              left: 110 * 3 / 4 + 4,
+                              child: GestureDetector(
+                                onTap: () {
+                                  hideKeyboard(context);
+                                  _showBottomSheet(context);
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.all(3),
+                                  decoration: boxDecorationDefault(shape: BoxShape.circle, color: Colors.white),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(5),
+                                    decoration: boxDecorationDefault(shape: BoxShape.circle, color: primaryColor),
+                                    child: const Icon(Icons.edit, size: 16, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ).paddingBottom(16),
+                      )
+                    : Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              hideKeyboard(context);
+                              _showBottomSheet(context);
+                            },
+                            child: DottedBorderWidget(
+                              color: context.primaryColor,
+                              radius: defaultRadius,
+                              child: Container(
+                                padding: EdgeInsets.all(26),
+                                alignment: Alignment.center,
+                                decoration: boxDecorationWithShadow(blurRadius: 0, backgroundColor: context.cardColor, borderRadius: radius()),
+                                child: Column(
+                                  children: [
+                                    ic_no_photo.iconImage(size: 46),
+                                    8.height,
+                                    Text(languages.chooseImage, style: secondaryTextStyle()),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          16.height,
+                          Text(languages.noteYouCanUpload, style: secondaryTextStyle(size: 10)),
+                        ],
+                      ),
+                16.height,
+                buildFormWidget(),
+                50.height,
+                Observer(
+                  builder: (context) => AppButton(
+                    text: context.translate.btnSave,
+                    height: 40,
+                    color: context.primaryColor,
+                    textStyle: boldTextStyle(color: white),
+                    width: context.width() - context.navigationBarHeight,
+                    onTap: appStore.isLoading
+                        ? null
+                        : () {
+                            ifNotTester(context, () {
+                              if ((imageFile != null && imageFile!.path.isNotEmpty)) {
+                                checkValidation();
+                              } else {
+                                toast(languages.pleaseSelectImages);
+                                hideKeyboard(context);
+                                _showBottomSheet(context);
+                              }
+                            });
+                          },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Observer(builder: (_) => LoaderWidget().center().visible(appStore.isLoading)),
+        ],
+      ),
+    );
   }
 
   void _showBottomSheet(BuildContext context) {
@@ -191,6 +309,9 @@ class _AddAddonServiceScreenState extends State<AddAddonServiceScreen> {
                                   selectedServiceId: appStore.selectedServiceData.id,
                                   isUpdate: widget.addonServiceData != null ? true : false,
                                 ).launch(context);
+                                if (serviceId == null && isUpdate) {
+                                  serviceId = widget.addonServiceData!.serviceId.validate();
+                                }
                                 setState(() {});
                               },
                             ),
@@ -293,121 +414,5 @@ class _AddAddonServiceScreenState extends State<AddAddonServiceScreen> {
   @override
   void setState(fn) {
     if (mounted) super.setState(fn);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBarWidget(
-        isUpdate ? languages.editAddonService : languages.addAddonService,
-        textColor: white,
-        color: context.primaryColor,
-      ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          SingleChildScrollView(
-            padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 90),
-            child: Column(
-              children: [
-                (imageFile != null && imageFile!.path.isNotEmpty)
-                    ? Center(
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 110,
-                              height: 110,
-                              child: LoaderWidget(),
-                            ).visible(imageFile!.path.isNotEmpty),
-                            CachedImageWidget(
-                              url: imageFile!.path,
-                              height: 110,
-                              width: 110,
-                              fit: BoxFit.cover,
-                            ).cornerRadiusWithClipRRect(defaultRadius),
-                            Positioned(
-                              top: 110 * 3 / 4 + 4,
-                              left: 110 * 3 / 4 + 4,
-                              child: GestureDetector(
-                                onTap: () {
-                                  hideKeyboard(context);
-                                  _showBottomSheet(context);
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(3),
-                                  decoration: boxDecorationDefault(shape: BoxShape.circle, color: Colors.white),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(5),
-                                    decoration: boxDecorationDefault(shape: BoxShape.circle, color: primaryColor),
-                                    child: const Icon(Icons.edit, size: 16, color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ).paddingBottom(16),
-                      )
-                    : Column(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              hideKeyboard(context);
-                              _showBottomSheet(context);
-                            },
-                            child: DottedBorderWidget(
-                              color: context.primaryColor,
-                              radius: defaultRadius,
-                              child: Container(
-                                padding: EdgeInsets.all(26),
-                                alignment: Alignment.center,
-                                decoration: boxDecorationWithShadow(blurRadius: 0, backgroundColor: context.cardColor, borderRadius: radius()),
-                                child: Column(
-                                  children: [
-                                    ic_no_photo.iconImage(size: 46),
-                                    8.height,
-                                    Text(languages.chooseImage, style: secondaryTextStyle()),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                          16.height,
-                          Text(languages.noteYouCanUpload, style: secondaryTextStyle(size: 10)),
-                        ],
-                      ),
-                16.height,
-                buildFormWidget(),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 16,
-            left: 16,
-            bottom: 16,
-            child: AppButton(
-              text: context.translate.btnSave,
-              height: 40,
-              color: context.primaryColor,
-              textStyle: boldTextStyle(color: white),
-              width: context.width() - context.navigationBarHeight,
-              onTap: () {
-                ifNotTester(context, () {
-                  if ((imageFile != null && imageFile!.path.isNotEmpty)) {
-                    checkValidation();
-                  } else {
-                    toast(languages.pleaseSelectImages);
-                    hideKeyboard(context);
-                    _showBottomSheet(context);
-                  }
-                });
-              },
-            ),
-          ),
-          Observer(builder: (_) => LoaderWidget().center().visible(appStore.isLoading)),
-        ],
-      ),
-    );
   }
 }

@@ -21,7 +21,7 @@ class PaymentHistoryListWidget extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            data.datetime.toString().validate().isNotEmpty ? Text(formatDate(data.datetime.toString().validate(), format: DATE_FORMAT_3), style: secondaryTextStyle()).fit() : SizedBox(),
+            data.datetime.toString().validate().isNotEmpty ? Text(formatDate(data.datetime.toString().validate(), format: DATE_FORMAT_3), style: secondaryTextStyle(size: 10)) : SizedBox(),
             8.height,
             data.datetime.toString().validate().isNotEmpty ? Text(formatDate(data.datetime.toString().validate(),isTime: true), style: primaryTextStyle(size: 12)) : SizedBox(),
           ],

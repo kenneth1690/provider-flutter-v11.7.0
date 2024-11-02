@@ -32,8 +32,8 @@ class _HandymanHomeFragmentState extends State<HandymanHomeFragment> {
     init();
   }
 
-  void init() async {
-    future = handymanDashboard().whenComplete(() {
+  void init({bool forceSyncAppConfigurations = false}) async {
+    future = handymanDashboard(forceSyncAppConfigurations: forceSyncAppConfigurations).whenComplete(() {
       setState(() {});
     });
   }
@@ -64,7 +64,7 @@ class _HandymanHomeFragmentState extends State<HandymanHomeFragment> {
                     8.height,
                     Text(languages.lblWelcomeBack, style: secondaryTextStyle(size: 14)).paddingLeft(16),
                     16.height,
-                    TodayCashComponent(todayCashAmount: snap.data!.todayCashAmount.validate()),
+                    TodayCashComponent(totalCashInHand: snap.data!.totalCashInHand.validate()),
                     8.height,
                     HandymanTotalComponent(snap: snap.data!),
                     8.height,
@@ -77,7 +77,7 @@ class _HandymanHomeFragmentState extends State<HandymanHomeFragment> {
                     page = 1;
                     appStore.setLoading(true);
 
-                    init();
+                    init(forceSyncAppConfigurations: true);
                     setState(() {});
 
                     return await 2.seconds.delay;

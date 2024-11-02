@@ -33,9 +33,8 @@ class _HandymanWidgetState extends State<HandymanWidget> {
 
     await updateHandymanStatus(request).then((value) {
       appStore.setLoading(false);
-
       toast(value.message.toString(), print: true);
-
+      widget.onUpdate?.call();
       setState(() {});
     }).catchError((e) {
       appStore.setLoading(false);

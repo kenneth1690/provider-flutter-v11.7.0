@@ -21,50 +21,39 @@ class HandymanTotalComponent extends StatelessWidget {
       runSpacing: 16,
       children: [
         HandymanTotalWidget(
-          title: languages.monthlyEarnings,
-          total: snap.totalRevenue.validate().toPriceFormat(),
-          icon: percent_line,
-        ).onTap(
-          () {
-            TotalEarningScreen().launch(context);
-          },
-          highlightColor: Colors.transparent,
-          splashColor: Colors.transparent,
-        ),
-        HandymanTotalWidget(
           title: languages.lblTotalBooking,
           total: snap.totalBooking.validate().toString(),
           icon: total_services,
         ).onTap(
           () {
-            // LiveStream().emit(LIVESTREAM_HANDYMAN_ALL_BOOKING, 1);
             LiveStream().emit(LIVESTREAM_CHANGE_HANDYMAN_TAB, {"index": 1});
           },
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
         ),
         HandymanTotalWidget(
-          title: languages.lblUpcomingServices,
-          total: snap.upcomingBookings!.length.validate().toString(),
+          title: languages.completedBookings,
+          total: snap.completedBooking.validate().toString(),
           icon: total_services,
         ).onTap(
           () {
-            // LiveStream().emit(LIVESTREAM_HANDY_BOARD, {"index": 1, "type": BookingStatusKeys.accept});
-            LiveStream().emit(LIVESTREAM_CHANGE_HANDYMAN_TAB, {"index": 1, "booking_type": BookingStatusKeys.accept});
+            LiveStream().emit(LIVESTREAM_CHANGE_HANDYMAN_TAB, {"index": 1, "booking_type": BookingStatusKeys.complete});
           },
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
         ),
         HandymanTotalWidget(
-          title: languages.lblTodayServices,
-
-          /// TODO translate to Today's Bookings text in all language
-          total: snap.todayBooking.validate().toString(),
-          icon: total_services,
+          title: languages.remainingPayout,
+          total: snap.remainingPayout.validate().toPriceFormat().toString(),
+          icon: percent_line,
+        ),
+        HandymanTotalWidget(
+          title: languages.totalRevenue,
+          total: snap.totalRevenue.validate().toPriceFormat(),
+          icon: percent_line,
         ).onTap(
           () {
-            LiveStream().emit(LIVESTREAM_CHANGE_HANDYMAN_TAB, {"index": 1});
-            // LiveStream().emit(LIVESTREAM_HANDYMAN_ALL_BOOKING, 1);
+            TotalEarningScreen().launch(context);
           },
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,

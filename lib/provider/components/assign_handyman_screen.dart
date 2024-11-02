@@ -59,7 +59,7 @@ class _AssignHandymanScreenState extends State<AssignHandymanScreen> {
 
     showConfirmDialogCustom(
       context,
-      title: '${languages.lblAreYouSureYouWantToAssignThisServiceTo} ${userListData!.firstName.validate()}',
+      title: '${languages.lblAreYouSureYouWantToAssignThisServiceTo(userListData!.firstName.validate())}',
       positiveText: languages.lblYes,
       negativeText: languages.lblNo,
       primaryColor: context.primaryColor,
@@ -122,55 +122,79 @@ class _AssignHandymanScreenState extends State<AssignHandymanScreen> {
     );
   }
 
+  Widget buildHandymanItem({required UserData userData}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        CachedImageWidget(
+          url: userData.profileImage!.isNotEmpty
+              ? userData.profileImage.validate()
+              : "",
+          height: 60,
+          fit: BoxFit.cover,
+          circle: true,
+        ),
+        16.width,
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Marquee(
+              child: HandymanNameWidget(
+                size: 14,
+                name: userData.displayName.validate(),
+                isHandymanAvailable: userData.isHandymanAvailable,
+              ),
+            ),
+            if (userData.handymanType.validate().isNotEmpty) 4.height,
+            if (userData.handymanType.validate().isNotEmpty)
+              Row(
+                children: [
+                  Text(
+                    "${userData.handymanType.validate()}",
+                    style: secondaryTextStyle(),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  4.width,
+                  Flexible(
+                    child: Text(
+                      "(${userData.handymanCommission.validate()} ${languages.commission})",
+                      style: secondaryTextStyle(),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            4.height,
+            if (userData.designation.validate().isNotEmpty)
+              Text(
+                "${userData.designation.validate()}",
+                style: secondaryTextStyle(),
+                overflow: TextOverflow.ellipsis,
+              )
+            else
+              Text(
+                "${languages.lblMemberSince} ${DateTime.parse(userData.createdAt.validate()).year}",
+                style: secondaryTextStyle(),
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ).flexible(),
+      ],
+    );
+  }
+
   Widget buildRadioListTile({required UserData userData}) {
+    if(!userData.isHandymanAvailable.validate()){
+      return buildHandymanItem(userData: userData).paddingSymmetric(vertical: 13, horizontal: 16);
+    }
     return RadioListTile<UserData>(
       value: userData,
       contentPadding: EdgeInsets.symmetric(vertical: 4, horizontal: 16),
       controlAffinity: ListTileControlAffinity.trailing,
       groupValue: userListData,
-      title: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          CachedImageWidget(
-            url: userData.profileImage!.isNotEmpty ? userData.profileImage.validate() : "",
-            height: 60,
-            fit: BoxFit.cover,
-            circle: true,
-          ),
-          16.width,
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Marquee(
-                child: HandymanNameWidget(
-                  size: 14,
-                  name: userData.displayName.validate(),
-                  isHandymanAvailable: userData.isHandymanAvailable,
-                ),
-              ),
-              if (userData.handymanType.validate().isNotEmpty) 4.height,
-              if (userData.handymanType.validate().isNotEmpty)
-                Text(
-                  "${userData.handymanType.validate()}",
-                  style: secondaryTextStyle(),
-                ),
-              4.height,
-              if (userData.designation.validate().isNotEmpty)
-                Text(
-                  "${userData.designation.validate()}",
-                  style: secondaryTextStyle(),
-                )
-              else
-                Text(
-                  "${languages.lblMemberSince} ${DateTime.parse(userData.createdAt.validate()).year}",
-                  style: secondaryTextStyle(),
-                ),
-            ],
-          ).flexible(),
-        ],
-      ),
+      title: buildHandymanItem(userData: userData),
       toggleable: false,
       onChanged: (value) {
         if (userData.isHandymanAvailable.validate()) {

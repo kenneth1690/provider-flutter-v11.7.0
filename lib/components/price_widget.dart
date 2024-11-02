@@ -48,31 +48,27 @@ class PriceWidget extends StatelessWidget {
             );
     }
 
-    return Observer(
-      builder: (context) {
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        Text(
+          "${isDiscountedPrice ? ' -' : ''}",
+          style: _textStyle(),
+        ),
+        Row(
           children: [
-            Text(
-              "${isDiscountedPrice ? ' -' : ''}",
-              style: _textStyle(),
-            ),
-            Row(
-              children: [
-                if (isFreeService)
-                  Text(languages.lblFree, style: _textStyle())
-                else
-                  Text(
-                    price.validate().toPriceFormat(),
-                    style: _textStyle(),
-                  ),
-                if (isHourlyService) Text('/${languages.lblHr}', style: secondaryTextStyle(color: hourlyTextColor, size: 14)),
-              ],
-            ),
+            if (isFreeService)
+              Text(languages.lblFree, style: _textStyle())
+            else
+              Text(
+                price.validate().toPriceFormat(),
+                style: _textStyle(),
+              ),
+            if (isHourlyService) Text('/${languages.lblHr}', style: secondaryTextStyle(color: hourlyTextColor, size: 14)),
           ],
-        );
-      },
+        ),
+      ],
     );
   }
 }

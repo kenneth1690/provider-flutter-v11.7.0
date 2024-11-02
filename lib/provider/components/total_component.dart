@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:handyman_provider_flutter/main.dart';
 import 'package:handyman_provider_flutter/models/dashboard_response.dart';
 import 'package:handyman_provider_flutter/provider/components/total_widget.dart';
-import 'package:handyman_provider_flutter/provider/handyman_list_screen.dart';
 import 'package:handyman_provider_flutter/provider/services/service_list_screen.dart';
-import 'package:handyman_provider_flutter/provider/wallet/wallet_history_screen.dart';
 import 'package:handyman_provider_flutter/screens/total_earning_screen.dart';
-import 'package:handyman_provider_flutter/utils/common.dart';
 import 'package:handyman_provider_flutter/utils/constant.dart';
 import 'package:handyman_provider_flutter/utils/extensions/num_extenstions.dart';
 import 'package:handyman_provider_flutter/utils/images.dart';
@@ -24,7 +20,11 @@ class TotalComponent extends StatelessWidget {
       spacing: 16,
       runSpacing: 16,
       children: [
-        TotalWidget(title: languages.lblTotalBooking, total: snap.totalBooking.toString(), icon: total_booking).onTap(
+        TotalWidget(
+          title: languages.lblTotalBooking,
+          total: snap.totalBooking.toString(),
+          icon: total_booking,
+        ).onTap(
           () {
             LiveStream().emit(LIVESTREAM_PROVIDER_ALL_BOOKING, 1);
           },
@@ -42,20 +42,13 @@ class TotalComponent extends StatelessWidget {
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
         ),
-        if (appStore.earningTypeSubscription && isUserTypeProvider)
-          TotalWidget(
-            title: languages.lblTotalHandyman,
-            total: snap.totalHandyman.validate().toString(),
-            icon: handyman,
-          ).onTap(
-            () {
-              HandymanListScreen().launch(context);
-            },
-            highlightColor: Colors.transparent,
-            splashColor: Colors.transparent,
-          ),
         TotalWidget(
-          title: languages.monthlyEarnings,
+          title: languages.remainingPayout,
+          total: snap.remainingPayout.validate().toPriceFormat().toString(),
+          icon: percent_line,
+        ),
+        TotalWidget(
+          title: languages.totalRevenue,
           total: snap.totalRevenue.validate().toPriceFormat(),
           icon: percent_line,
         ).onTap(
@@ -65,22 +58,6 @@ class TotalComponent extends StatelessWidget {
           highlightColor: Colors.transparent,
           splashColor: Colors.transparent,
         ),
-        Observer(builder: (context) {
-          if (appStore.earningTypeCommission)
-            return TotalWidget(
-              title: languages.lblWallet,
-              total: snap.providerWallet != null ? snap.providerWallet!.amount.validate().toPriceFormat().toString() : 0.toPriceFormat().toString(),
-              icon: un_fill_wallet,
-            ).onTap(
-              () {
-                WalletHistoryScreen().launch(context);
-              },
-              highlightColor: Colors.transparent,
-              splashColor: Colors.transparent,
-            );
-
-          return Offstage();
-        }),
       ],
     ).paddingAll(16);
   }

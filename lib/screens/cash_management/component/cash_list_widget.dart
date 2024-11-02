@@ -48,7 +48,7 @@ class _CashListWidgetState extends State<CashListWidget> {
           await PayToScreen(paymentData: widget.data, totalNumberOfBookings: 1).launch(context);
           widget.onRefresh.call();
         },
-      );
+      ).paddingTop(16);
     } else if (isUserTypeProvider && status == APPROVED_BY_PROVIDER) {
       return AppButton(
         width: context.width(),
@@ -58,12 +58,12 @@ class _CashListWidgetState extends State<CashListWidget> {
           await PayToScreen(paymentData: widget.data, totalNumberOfBookings: 1).launch(context);
           widget.onRefresh.call();
         },
-      );
-    } else if (status == PENDING_BY_PROVIDER) {
+      ).paddingTop(16);
+    } else if (isUserTypeProvider && status == PENDING_BY_PROVIDER) {
       return AppButton(
         width: context.width(),
         color: context.primaryColor,
-        text: languages.cashPaymentApproval,
+        text: languages.lblConfirmPayment,
         onTap: () {
           transferAmountAPI(
             context,
@@ -76,7 +76,7 @@ class _CashListWidgetState extends State<CashListWidget> {
             },
           );
         },
-      );
+      ).paddingTop(16);
     }
 
     return Container();
@@ -84,8 +84,6 @@ class _CashListWidgetState extends State<CashListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    log("widget.data.datetime.toString()::::::::::::::;;");
-    log(widget.data.datetime.toString());
     return GestureDetector(
       onTap: () {
         BookingDetailScreen(bookingId: widget.data.bookingId.validate().toInt()).launch(context);
@@ -194,7 +192,6 @@ class _CashListWidgetState extends State<CashListWidget> {
                   ),
               ],
             ),
-            16.height,
             _buildActionWidget(status: widget.data.status.validate()),
           ],
         ),

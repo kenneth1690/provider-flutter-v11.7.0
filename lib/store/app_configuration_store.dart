@@ -96,6 +96,9 @@ abstract class _AppConfigurationStore with Store {
   @observable
   bool autoAssignStatus = getBoolAsync(AUTO_ASSIGN_STATUS);
 
+  @observable
+  bool isUserAuthorized = getBoolAsync(IS_USER_AUTHORIZED);
+
   @action
   Future<void> setAutoAssignStatus(bool val) async {
     autoAssignStatus = val;
@@ -266,5 +269,11 @@ abstract class _AppConfigurationStore with Store {
   @action
   void setFirebaseKey(String val) {
     firebaseServerKey = val;
+  }
+  
+  @action
+  Future<void> setISUserAuthorized(bool val) async {
+    isUserAuthorized = val;
+    await setValue(IS_USER_AUTHORIZED, val);
   }
 }

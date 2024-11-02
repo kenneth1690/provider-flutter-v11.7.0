@@ -50,10 +50,6 @@ class CommissionComponent extends StatelessWidget {
                         : commission.commission.validate().toPriceFormat(),
                     style: boldTextStyle(size: 12),
                   ),
-                  if (isCommissionTypePercent(commission.type))
-                    TextSpan(
-                        text: ' (${languages.lblFixed})',
-                        style: secondaryTextStyle(size: 12)),
                 ],
               ),
             ],

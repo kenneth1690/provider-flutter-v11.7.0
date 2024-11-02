@@ -142,8 +142,7 @@ class _AddBlogScreenState extends State<AddBlogScreen> {
       ),
       child: Form(
         key: formKey,
-        child: Wrap(
-          runSpacing: 16,
+        child: Column(
           children: [
             AppTextField(
               textFieldType: TextFieldType.NAME,
@@ -177,6 +176,7 @@ class _AddBlogScreenState extends State<AddBlogScreen> {
                 fillColor: context.scaffoldBackgroundColor,
               ),
             ),
+            16.height,
             DropdownButtonFormField<StaticDataModel>(
               isExpanded: true,
               dropdownColor: context.cardColor,
@@ -215,10 +215,9 @@ class _AddBlogScreenState extends State<AddBlogScreen> {
         backWidget: BackWidget(),
       ),
       body: Stack(
-        fit: StackFit.expand,
         children: [
           SingleChildScrollView(
-            padding: EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 90),
+            padding: EdgeInsets.only(top: 16, left: 16.0, right: 16.0, bottom: 25.0),
             child: Column(
               children: [
                 CustomImagePicker(
@@ -258,24 +257,19 @@ class _AddBlogScreenState extends State<AddBlogScreen> {
                   },
                 ),
                 buildFormWidget(),
+                AppButton(
+                  text: languages.btnSave,
+                  height: 40,
+                  color: context.primaryColor,
+                  textStyle: boldTextStyle(color: white),
+                  width: context.width() - context.navigationBarHeight,
+                  onTap: () {
+                    ifNotTester(context, () {
+                      checkValidation();
+                    });
+                  },
+                ),
               ],
-            ),
-          ),
-          Positioned(
-            right: 16,
-            left: 16,
-            bottom: 16,
-            child: AppButton(
-              text: languages.btnSave,
-              height: 40,
-              color: context.primaryColor,
-              textStyle: boldTextStyle(color: white),
-              width: context.width() - context.navigationBarHeight,
-              onTap: () {
-                ifNotTester(context, () {
-                  checkValidation();
-                });
-              },
             ),
           ),
           Observer(builder: (_) => LoaderWidget().center().visible(appStore.isLoading)),

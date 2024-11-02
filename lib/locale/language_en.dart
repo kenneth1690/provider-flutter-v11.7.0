@@ -1,107 +1,107 @@
 import 'package:handyman_provider_flutter/locale/base_language.dart';
 
-class LanguageEs extends Languages {
+class LanguageEn extends Languages {
   @override
-  String planAboutToExpire(int days) => 'Tu plan está a punto de expirar en $days días';
+  String planAboutToExpire(int days) => 'Your Plan Is About to Expire In $days Days';
 
   @override
-  String get appName => 'Proveedor';
+  String get appName => 'Provider';
 
   @override
-  String get provider => 'Proveedor';
+  String get provider => 'Provider';
 
   @override
-  String get lblShowingOnly4Handyman => 'Mostrando solo 4 manitas';
+  String get lblShowingOnly4Handyman => 'Showing Only 4 Handyman';
 
   @override
-  String get lblRecentlyOnlineHandyman => 'Manitas recientemente en línea';
+  String get lblRecentlyOnlineHandyman => 'Recently Online Handyman';
 
   @override
-  String get lblStartDrive => 'Iniciar conducción';
+  String get lblStartDrive => 'Start Drive';
 
   @override
-  String get handyman => 'Manitas';
+  String get handyman => 'Handyman';
 
   @override
-  String get signIn => 'Iniciar sesión';
+  String get signIn => 'Sign In';
 
   @override
-  String get signUp => 'Registrarse';
+  String get signUp => 'Sign Up';
 
   @override
-  String get hintFirstNameTxt => 'Nombre';
+  String get hintFirstNameTxt => 'First Name';
 
   @override
-  String get hintLastNameTxt => 'Apellido';
+  String get hintLastNameTxt => 'Last Name';
 
   @override
-  String get hintContactNumberTxt => 'Número de contacto';
+  String get hintContactNumberTxt => 'Contact Number';
 
   @override
-  String get hintEmailAddressTxt => 'Dirección de correo electrónico';
+  String get hintEmailAddressTxt => 'Email Address';
 
   @override
-  String get hintUserNameTxt => 'Nombre de usuario';
+  String get hintUserNameTxt => 'User Name';
 
   @override
-  String get hintReenterPasswordTxt => 'Reingresar contraseña';
+  String get hintReenterPasswordTxt => 'Re-enter Password';
 
   @override
-  String get confirm => 'Confirmar';
+  String get confirm => 'Confirm';
 
   @override
-  String get forgotPassword => '¿Olvidaste tu contraseña?';
+  String get forgotPassword => 'Forgot Password?';
 
   @override
-  String get alreadyHaveAccountTxt => '¿Ya tienes una cuenta?';
+  String get alreadyHaveAccountTxt => 'Already have an Account';
 
   @override
-  String get rememberMe => 'Recuérdame';
+  String get rememberMe => 'Remember Me';
 
   @override
-  String get forgotPasswordTitleTxt => 'Ingresa tu dirección de correo electrónico';
+  String get forgotPasswordTitleTxt => 'Enter your email address';
 
   @override
-  String get resetPassword => 'Restablecer contraseña';
+  String get resetPassword => 'Reset Password';
 
   @override
-  String get editProfile => 'Editar perfil';
+  String get editProfile => 'Edit profile';
 
   @override
-  String get saveChanges => 'Guardar cambios';
+  String get saveChanges => 'Save Changes';
 
   @override
-  String get camera => 'Cámara';
+  String get camera => 'Camera';
 
   @override
-  String get language => 'Idioma de la aplicación';
+  String get language => 'App Language';
 
   @override
-  String get appTheme => 'Tema de la aplicación';
+  String get appTheme => 'App Theme';
 
   @override
-  String get bookingHistory => 'Historial de reservas';
+  String get bookingHistory => 'Booking History';
 
   @override
-  String get logout => 'Cerrar sesión';
+  String get logout => 'Logout';
 
   @override
-  String get afterLogoutTxt => '¿Quieres cerrar sesión en la aplicación? ¡Siempre puedes iniciar sesión de nuevo!';
+  String get afterLogoutTxt => 'Do you want to logout from the app? You can always logged in again!';
 
   @override
-  String get chooseTheme => 'Elige el tema de la aplicación';
+  String get chooseTheme => 'Choose the App Theme';
 
   @override
-  String get selectCountry => 'Seleccionar país';
+  String get selectCountry => 'Select Country';
 
   @override
-  String get selectState => 'Seleccionar estado';
+  String get selectState => 'Select State';
 
   @override
-  String get selectCity => 'Seleccionar ciudad';
+  String get selectCity => 'Select City';
 
   @override
-  String get changePassword => 'Cambiar contraseña';
+  String get changePassword => 'Change Password';
 
   @override
   String get passwordNotMatch => "Password does not match";
@@ -365,13 +365,13 @@ class LanguageEs extends Languages {
   String get lblRateUs => "Rate us";
 
   @override
-  String get lblTermsAndConditions => "Terms and Conditions";
+  String get lblTermsAndConditions => 'Terms & Conditions';
 
   @override
   String get lblPrivacyPolicy => "Privacy Policy";
 
   @override
-  String get lblHelpAndSupport => "Help and Support";
+  String get lblHelpAndSupport => 'Help & Support';
 
   @override
   String get lblAbout => "About";
@@ -539,7 +539,7 @@ class LanguageEs extends Languages {
   String get lblDeleteAddress => "Delete Address";
 
   @override
-  String get lblDeleteAddressMsg => "Are you sure you want to delete this address";
+  String get lblDeleteAddressMsg => "Do you want to delete this address?";
 
   @override
   String get lblChoosePaymentMethod => "Choose Payment Method";
@@ -629,7 +629,7 @@ class LanguageEs extends Languages {
   String get lblEarningList => "Earning List";
 
   @override
-  String get lblSubscriptionTitle => "Are you sure want to cancel current plan?";
+  String get lblSubscriptionTitle => "Do want to cancel current plan?";
 
   @override
   String get lblPlan => "Plan";
@@ -680,7 +680,7 @@ class LanguageEs extends Languages {
   String get lblWallet => "Wallet";
 
   @override
-  String get lblSelectUserType => "Select User Type";
+  String get lblSelectCommission => "Select Commission";
 
   @override
   String get lblIAgree => "I agree to the";
@@ -773,10 +773,10 @@ class LanguageEs extends Languages {
   String get lblIsAvailableWouldYouLike => "is available. Would you like to update?";
 
   @override
-  String get lblAreYouSureYouWantToAssignThisServiceTo => "Are you sure you want to assign this service to";
+  String lblAreYouSureYouWantToAssignThisServiceTo(String name) => "Do you want to assign this service to $name?";
 
   @override
-  String get lblAreYouSureYouWantToAssignToYourself => "Are you sure you want to Assign to yourself?";
+  String get lblAreYouSureYouWantToAssignToYourself => "Do you want to Assign to yourself?";
 
   @override
   String get lblAssignToMyself => "Assign to Myself";
@@ -1070,7 +1070,7 @@ class LanguageEs extends Languages {
   String get packageService => 'Package Service';
 
   @override
-  String get confirmationRemovePackage => 'Are you sure want remove this service from the package?';
+  String get confirmationRemovePackage => 'Do want remove this service from the package?';
 
   @override
   String get packageName => 'Package Name';
@@ -1160,13 +1160,13 @@ class LanguageEs extends Languages {
   String get lblStripeTestCredential => 'Testing Credential cannot pay more then 500';
 
   @override
-  String get lblSuccessFullyActivated => 'is successFully activated';
+  String get lblSuccessFullyActivated => 'is successfully activated';
 
   @override
   String get lblNoTaxesFound => 'No Taxes Found';
 
   @override
-  String get lblConfirmationForDeleteMsg => 'Are you sure you want to delete the message?';
+  String get lblConfirmationForDeleteMsg => 'Do you want to delete the message?';
 
   @override
   String get lblImage => 'Image';
@@ -1217,7 +1217,7 @@ class LanguageEs extends Languages {
   String get views => 'Views';
 
   @override
-  String get deleteBlogTitle => 'Are you sure want to delete this blog?';
+  String get deleteBlogTitle => 'Do want to delete this blog?';
 
   @override
   String get enterBlogTitle => 'Enter your blog title';
@@ -1247,7 +1247,7 @@ class LanguageEs extends Languages {
   String get published => 'Published';
 
   @override
-  String get clearChatMessage => 'Are you sure you want to clear this chat?';
+  String get clearChatMessage => 'Do you want to clear this chat?';
 
   @override
   String get all => 'All';
@@ -1337,7 +1337,7 @@ class LanguageEs extends Languages {
   String get use24HourFormat => 'Use 24-hour format?';
 
   @override
-  String get successfullyActivated => 'is successFully activated';
+  String get successfullyActivated => 'is successfully activated';
 
   @override
   String get providerHome => 'Provider Home';
@@ -1359,9 +1359,6 @@ class LanguageEs extends Languages {
 
   @override
   String get theService => 'the service';
-
-  @override
-  String get areYouSureYouWantTo => 'Are you sure you want to';
 
   @override
   String get selectDuration => 'Select Duration';
@@ -1506,16 +1503,16 @@ class LanguageEs extends Languages {
   String get adminApprovedTheRequest => "Admin approved the request";
 
   @override
-  String get today => " Today";
+  String get today => "Today";
 
   @override
-  String get yesterday => " Yesterday";
+  String get yesterday => "Yesterday";
 
   @override
-  String get customDate => " Custom Date";
+  String get customDate => "Custom Date";
 
   @override
-  String get totalCash => "Total Cash";
+  String get totalCash => "Total Cash in Hand";
 
   @override
   String get tomorrow => "Tomorrow";
@@ -1614,7 +1611,7 @@ class LanguageEs extends Languages {
   String get selectUserType => 'Select User Type';
 
   @override
-  String get pleaseSelectUserType => 'Please select user type';
+  String get pleaseSelectCommission => 'Please select commission';
 
   @override
   String get copied => 'Copied';
@@ -1999,8 +1996,8 @@ class LanguageEs extends Languages {
   @override
   String get addBank => "Add bank";
 
-@override
-String get successful => 'Successful';
+  @override
+  String get successful => 'Successful';
 
   @override
   String get yourWithdrawalRequestHasBeenSuccessfullySubmitted => 'Your withdrawal request has been successfully submitted.';
@@ -2065,9 +2062,90 @@ String get successful => 'Successful';
   @override
   String get credit => 'Credit';
 
- @override
-String get fullNameOnBankAccount => 'Full name on bank account';
+  @override
+  String get fullNameOnBankAccount => 'Full name on bank account';
 
-@override
-String get updateYourLocation => 'Update your location';
+  @override
+  String get updateYourLocation => 'Update your location';
+
+  @override
+  String get lbHours => "Hours";
+
+  @override
+  String get lbMinutes => "Minutes";
+
+  @override
+  String get handymanCommission => 'Handyman Commission';
+
+  @override
+  String get commission => 'Commission';
+
+  @override
+  String get noCommissionTypeListFound => 'No Commission Type List Found';
+
+  @override
+  String get typeName => 'Type Name';
+
+  @override
+  String get addHandymanCommission => 'Add Handyman Commission';
+
+  @override
+  String get editHandymanCommission => 'Edit Handyman Commission';
+
+  @override
+  String get enterValidCommissionValue => 'Enter Valid Commission Value';
+
+  @override
+  String get percentage => 'Percentage';
+
+  @override
+  String get selectStatus => 'Select Status';
+
+  @override
+  String get youCanTUpdateDeleted => "You can't update deleted items";
+
+  @override
+  String get thisCommissionHasBeen => 'This commission has been created by the admin.';
+
+  @override
+  String get copyMessage => 'Copy Message';
+
+  @override
+  String get transactions => 'Transactions';
+
+  @override
+  String get thisYear => 'This Year';
+
+  @override
+  String get thisMonth => 'This Month';
+
+  @override
+  String get thisWeek => 'This Week';
+
+  @override
+  String get providerList => 'Provider List';
+
+  @override
+  String get walletBalance => 'Wallet Balance';
+
+  @override
+  String get remainingPayout => 'Remaining Payout';
+
+  @override
+  String get totalRevenue => 'Total Revenue';
+
+  @override
+  String get totalActiveCount => 'Total Active Count:';
+
+  @override
+  String get completedBookings => 'Completed Bookings';
+
+  @override
+  String get pickAProviderYou => 'Pick A provider you wish to work with';
+
+  @override
+  String get selectedProvider => 'Selected Provider';
+
+  @override
+  String get youHavePermanentlyDenied => 'You have permanently denied location permission please allow for live location tracking from your settings';
 }

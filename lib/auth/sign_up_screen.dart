@@ -1,3 +1,5 @@
+// ignore_for_file: invalid_use_of_visible_for_testing_member, invalid_use_of_protected_member
+
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -12,11 +14,17 @@ import 'package:handyman_provider_flutter/networks/rest_apis.dart';
 import 'package:handyman_provider_flutter/utils/common.dart';
 import 'package:handyman_provider_flutter/utils/configs.dart';
 import 'package:handyman_provider_flutter/utils/constant.dart';
+import 'package:handyman_provider_flutter/utils/extensions/num_extenstions.dart';
 import 'package:handyman_provider_flutter/utils/extensions/string_extension.dart';
 import 'package:handyman_provider_flutter/utils/images.dart';
 import 'package:handyman_provider_flutter/utils/model_keys.dart';
 import 'package:nb_utils/nb_utils.dart';
 import 'package:url_launcher/url_launcher.dart' as launch;
+
+import '../components/back_widget.dart';
+import '../components/cached_image_widget.dart';
+import '../models/user_data.dart';
+import '../provider/provider_list_screen.dart';
 
 bool isNew = false;
 
@@ -28,6 +36,9 @@ class SignUpScreen extends StatefulWidget {
 class _SignUpScreenState extends State<SignUpScreen> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+  //-------------------------------- Variables -------------------------------//
+
+  /// TextEditing controller
   TextEditingController fNameCont = TextEditingController();
   TextEditingController lNameCont = TextEditingController();
   TextEditingController emailCont = TextEditingController();
@@ -36,6 +47,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController passwordCont = TextEditingController();
   TextEditingController designationCont = TextEditingController();
 
+  /// FocusNodes
   FocusNode fNameFocus = FocusNode();
   FocusNode lNameFocus = FocusNode();
   FocusNode emailFocus = FocusNode();
@@ -48,59 +60,94 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   String? selectedUserTypeValue;
 
-  List<UserTypeData> userTypeList = [UserTypeData(name: languages.selectUserType, id: -1)];
-  UserTypeData? selectedUserTypeData;
+  List<UserTypeData> commissionTypeList = [UserTypeData(name: languages.lblSelectCommission, id: -1)];
+
+  UserTypeData? selectedUserCommissionType;
 
   bool isAcceptedTc = false;
   Country selectedCountry = defaultCountry();
 
+  ValueNotifier _valueNotifier = ValueNotifier(true);
+
+  UserData? selectedProvider;
+
+  int? selectedProviderId;
+
   @override
-  void initState() {
-    super.initState();
-    init();
+  void dispose() {
+    super.dispose();
+
+    fNameCont.dispose();
+    lNameCont.dispose();
+    emailCont.dispose();
+    userNameCont.dispose();
+    mobileCont.dispose();
+    passwordCont.dispose();
+    designationCont.dispose();
+
+    fNameFocus.dispose();
+    lNameFocus.dispose();
+    emailFocus.dispose();
+    userNameFocus.dispose();
+    mobileFocus.dispose();
+    userTypeFocus.dispose();
+    typeFocus.dispose();
+    passwordFocus.dispose();
+    designationFocus.dispose();
   }
 
-  void init() async {}
+  //----------------------------------- UI -----------------------------------//
 
-  Future<void> changeCountry() async {
-    showCountryPicker(
-      context: context,
-      countryListTheme: CountryListThemeData(
-        textStyle: secondaryTextStyle(color: textSecondaryColorGlobal),
-        searchTextStyle: primaryTextStyle(),
-        inputDecoration: InputDecoration(
-          labelText: languages.search,
-          prefixIcon: const Icon(Icons.search),
-          border: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: const Color(0xFF8C98A8).withOpacity(0.2),
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: transparentColor,
+          leading: Container(
+              margin: EdgeInsets.only(left: 6),
+              padding: EdgeInsets.only(left: 6),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                shape: BoxShape.circle,
+              ),
+              child: BackWidget(color: context.iconColor)),
+          scrolledUnderElevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle(statusBarIconBrightness: appStore.isDarkMode ? Brightness.light : Brightness.dark, statusBarColor: context.scaffoldBackgroundColor),
+        ),
+        body: Stack(
+          alignment: AlignmentDirectional.center,
+          children: [
+            Form(
+              key: formKey,
+              child: SingleChildScrollView(
+                physics: BouncingScrollPhysics(),
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildTopWidget(),
+                    _buildFormWidget(),
+                    _buildFooterWidget(),
+                  ],
+                ),
+              ),
             ),
-          ),
+            Observer(builder: (context) => LoaderWidget().center().visible(appStore.isLoading))
+          ],
         ),
       ),
-      showPhoneCode: true, // optional. Shows phone code before the country name.
-      onSelect: (Country country) {
-        selectedCountry = country;
-        setState(() {});
-      },
     );
   }
 
-  //region New Logic
-  String buildMobileNumber() {
-    return '${selectedCountry.phoneCode}-${mobileCont.text.trim()}';
-  }
-
-  @override
-  void setState(fn) {
-    if (mounted) super.setState(fn);
-  }
-
-  //region Widgets
-
+  //------------------------------ Helper Widgets-----------------------------//
+  // Build hello user With Create Your Account for Better Experience text...
   Widget _buildTopWidget() {
     return Column(
       children: [
+        (context.height() * 0.12).toInt().height,
         Container(
           width: 85,
           height: 85,
@@ -123,6 +170,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Widget _buildFormWidget() {
     return Column(
       children: [
+        // First name text field...
         AppTextField(
           textFieldType: TextFieldType.NAME,
           controller: fNameCont,
@@ -133,6 +181,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           suffix: profile.iconImage(size: 10).paddingAll(14),
         ),
         16.height,
+        // Last name text field...
         AppTextField(
           textFieldType: TextFieldType.NAME,
           controller: lNameCont,
@@ -143,6 +192,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           suffix: profile.iconImage(size: 10).paddingAll(14),
         ),
         16.height,
+        // User name test field...
         AppTextField(
           textFieldType: TextFieldType.USERNAME,
           controller: userNameCont,
@@ -153,6 +203,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           suffix: profile.iconImage(size: 10).paddingAll(14),
         ),
         16.height,
+        // Email text field...
         AppTextField(
           textFieldType: TextFieldType.EMAIL_ENHANCED,
           controller: emailCont,
@@ -163,30 +214,51 @@ class _SignUpScreenState extends State<SignUpScreen> {
           suffix: ic_message.iconImage(size: 10).paddingAll(14),
         ),
         16.height,
-        AppTextField(
-          textFieldType: isAndroid ? TextFieldType.PHONE : TextFieldType.NAME,
-          controller: mobileCont,
-          focus: mobileFocus,
-          isValidationRequired: false,
-          buildCounter: (_, {required int currentLength, required bool isFocused, required int? maxLength}) {
-            return TextButton(
-              child: Text(languages.lblChangeCountry, style: primaryTextStyle(size: 12)),
-              onPressed: () {
-                changeCountry();
-              },
-            );
-          },
-          errorThisFieldRequired: languages.hintRequired,
-          nextFocus: passwordFocus,
-          decoration: inputDecoration(context, hint: '${languages.hintContactNumberTxt}').copyWith(
-            hintText: '${languages.lblExample}: ${selectedCountry.example}',
-            hintStyle: secondaryTextStyle(),
-            prefixText: '+${selectedCountry.phoneCode} ',
-          ),
-          maxLength: 15,
-          suffix: calling.iconImage(size: 10).paddingAll(14),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Country code ...
+            Container(
+              height: 48.0,
+              decoration: BoxDecoration(
+                color: context.cardColor,
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              child: Center(
+                child: ValueListenableBuilder(
+                  valueListenable: _valueNotifier,
+                  builder: (context, value, child) => Row(
+                    children: [
+                      Text(
+                        "+${selectedCountry.phoneCode}",
+                        style: primaryTextStyle(size: 12),
+                      ).paddingOnly(left: 8),
+                      Icon(Icons.arrow_drop_down)
+                    ],
+                  ).paddingOnly(left: 8),
+                ),
+              ),
+            ).onTap(() => changeCountry()),
+            10.width,
+            // Mobile number text field...
+            AppTextField(
+              textFieldType: isAndroid ? TextFieldType.PHONE : TextFieldType.NAME,
+              controller: mobileCont,
+              focus: mobileFocus,
+              isValidationRequired: false,
+              errorThisFieldRequired: languages.hintRequired,
+              nextFocus: passwordFocus,
+              decoration: inputDecoration(context, hint: '${languages.hintContactNumberTxt}').copyWith(
+                hintText: '${languages.lblExample}: ${selectedCountry.example}',
+                hintStyle: secondaryTextStyle(),
+              ),
+              maxLength: 15,
+              suffix: calling.iconImage(size: 10).paddingAll(14),
+            ).expand(),
+          ],
         ),
         8.height,
+        // Designation text field...
         AppTextField(
           textFieldType: TextFieldType.USERNAME,
           controller: designationCont,
@@ -197,69 +269,169 @@ class _SignUpScreenState extends State<SignUpScreen> {
           suffix: profile.iconImage(size: 10).paddingAll(14),
         ),
         16.height,
-        DropdownButtonFormField<String>(
-          items: [
-            DropdownMenuItem(
-              child: Text(languages.provider, style: primaryTextStyle()),
-              value: USER_TYPE_PROVIDER,
-            ),
-            DropdownMenuItem(
-              child: Text(languages.handyman, style: primaryTextStyle()),
-              value: USER_TYPE_HANDYMAN,
-            ),
-          ],
-          focusNode: userTypeFocus,
-          dropdownColor: context.cardColor,
-          decoration: inputDecoration(context, hint: languages.userRole),
-          value: selectedUserTypeValue,
-          validator: (value) {
-            if (value == null) return errorThisFieldRequired;
-            return null;
-          },
-          onChanged: (c) {
-            hideKeyboard(context);
-            selectedUserTypeValue = c.validate();
-
-            userTypeList.clear();
-            selectedUserTypeData = null;
-
-            getUserType(type: selectedUserTypeValue!).then((value) {
-              userTypeList = value.userTypeData.validate();
+        // User role text field...
+        ValueListenableBuilder(
+          valueListenable: _valueNotifier,
+          builder: (context, value, child) => DropdownButtonFormField<String>(
+            items: [
+              DropdownMenuItem(
+                child: Text(languages.provider, style: primaryTextStyle()),
+                value: USER_TYPE_PROVIDER,
+              ),
+              DropdownMenuItem(
+                child: Text(languages.handyman, style: primaryTextStyle()),
+                value: USER_TYPE_HANDYMAN,
+              ),
+            ],
+            focusNode: userTypeFocus,
+            dropdownColor: context.cardColor,
+            decoration: inputDecoration(context, hint: languages.userRole),
+            value: selectedUserTypeValue,
+            validator: (value) {
+              if (value == null) return errorThisFieldRequired;
+              return null;
+            },
+            onChanged: (c) {
+              hideKeyboard(context);
+              selectedUserTypeValue = c.validate();
               setState(() {});
-            }).catchError((e) {
-              userTypeList = [UserTypeData(name: languages.selectUserType, id: -1)];
-              log(e.toString());
-            });
-          },
-        ),
-        16.height,
-        DropdownButtonFormField<UserTypeData>(
-          onChanged: (UserTypeData? val) {
-            selectedUserTypeData = val;
-            setState(() {});
-          },
-          validator: selectedUserTypeData == null
-              ? (c) {
-                  if (c == null) return errorThisFieldRequired;
-                  return null;
-                }
-              : null,
-          value: selectedUserTypeData,
-          dropdownColor: context.cardColor,
-          decoration: inputDecoration(context, hint: languages.lblSelectUserType),
-          items: List.generate(
-            userTypeList.length,
-            (index) {
-              UserTypeData data = userTypeList[index];
 
-              return DropdownMenuItem<UserTypeData>(
-                child: Text(data.name.toString(), style: primaryTextStyle()),
-                value: data,
-              );
+              if (selectedProvider != null) {
+                selectedProvider = null;
+                setState(() {});
+              }
+
+              commissionTypeList.clear();
+              selectedUserCommissionType = null;
+
+              getCommissionType(type: selectedUserTypeValue!).then((value) {
+                commissionTypeList = value.userTypeData.validate();
+
+                _valueNotifier.notifyListeners();
+              }).catchError((e) {
+                commissionTypeList = [UserTypeData(name: languages.lblSelectCommission, id: -1)];
+                log(e.toString());
+              });
             },
           ),
         ),
+        if (selectedUserTypeValue != USER_TYPE_HANDYMAN) 16.height,
+        if (selectedUserTypeValue == USER_TYPE_HANDYMAN)
+          Container(
+            decoration: boxDecorationDefault(color: context.cardColor, borderRadius: radius()),
+            padding: EdgeInsets.only(
+              top: selectedProvider != null ? 16 : 0,
+              bottom: selectedProvider != null ? 16 : 0,
+              left: selectedProvider != null ? 16 : 0,
+              right: 4,
+            ),
+            margin: EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                if (selectedProvider != null)
+                  GestureDetector(
+                    onTap: () {
+                      pickProvider();
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(languages.selectedProvider, style: secondaryTextStyle()).paddingOnly(bottom: 8),
+                        Row(
+                          children: [
+                            CachedImageWidget(
+                              url: selectedProvider!.profileImage.validate(),
+                              height: 24,
+                              circle: true,
+                              fit: BoxFit.cover,
+                            ),
+                            8.width,
+                            Text(
+                              selectedProvider!.displayName.validate(),
+                              style: primaryTextStyle(size: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ).expand(),
+                if (selectedProvider != null)
+                  IconButton(
+                    onPressed: () {
+                      selectedProvider = null;
+                      setState(() {});
+
+                      commissionTypeList.clear();
+                      selectedUserCommissionType = null;
+
+                      getCommissionType(type: selectedUserTypeValue!).then((value) {
+                        commissionTypeList = value.userTypeData.validate();
+
+                        _valueNotifier.notifyListeners();
+                      }).catchError((e) {
+                        commissionTypeList = [UserTypeData(name: languages.lblSelectCommission, id: -1)];
+                        log(e.toString());
+                      });
+                    },
+                    icon: Icon(Icons.close),
+                  )
+                else
+                  TextButton(
+                    onPressed: () async {
+                      pickProvider();
+                    },
+                    child: Text(languages.pickAProviderYou),
+                  ),
+              ],
+            ),
+          ),
+        // Select user type text field...
+        ValueListenableBuilder(
+          valueListenable: _valueNotifier,
+          builder: (context, value, child) => DropdownButtonFormField<UserTypeData>(
+            onChanged: (UserTypeData? val) {
+              selectedUserCommissionType = val;
+              _valueNotifier.notifyListeners();
+            },
+            validator: selectedUserCommissionType == null
+                ? (c) {
+                    if (c == null) return errorThisFieldRequired;
+                    return null;
+                  }
+                : null,
+            value: selectedUserCommissionType,
+            dropdownColor: context.cardColor,
+            decoration: inputDecoration(context, hint: languages.lblSelectCommission),
+            items: List.generate(
+              commissionTypeList.length,
+              (index) {
+                UserTypeData data = commissionTypeList[index];
+
+                return DropdownMenuItem<UserTypeData>(
+                  child: Row(
+                    children: [
+                      Text(data.name.toString(), style: primaryTextStyle()),
+                      4.width,
+                      if (data.type == COMMISSION_TYPE_PERCENT)
+                        Text(
+                          '(${data.commission.toString()}%)',
+                          style: primaryTextStyle(),
+                        )
+                      else if (data.type == COMMISSION_TYPE_FIXED)
+                        Text('(${data.commission.validate().toPriceFormat()})', style: primaryTextStyle()),
+                    ],
+                  ),
+                  value: data,
+                );
+              },
+            ),
+          ),
+        ),
         16.height,
+        // Password text field...
         AppTextField(
           textFieldType: TextFieldType.PASSWORD,
           controller: passwordCont,
@@ -275,6 +447,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         20.height,
         _buildTcAcceptWidget(),
         8.height,
+        // Sign up button
         AppButton(
           text: languages.lblSignup,
           height: 40,
@@ -289,37 +462,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 
-  Widget _buildFooterWidget() {
-    return Column(
-      children: [
-        16.height,
-        RichTextWidget(
-          list: [
-            TextSpan(text: "${languages.alreadyHaveAccountTxt}? ", style: secondaryTextStyle()),
-            TextSpan(
-              text: languages.signIn,
-              style: boldTextStyle(color: primaryColor),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () {
-                  finish(context);
-                },
-            ),
-          ],
-        ),
-        30.height,
-      ],
-    );
+  // Pick a Provider
+  void pickProvider() async {
+    UserData? user = await ProviderListScreen(status: '$USER_STATUS_CODE').launch(context);
+
+    if (user != null) {
+      selectedProvider = user;
+      selectedProviderId = user.id.validate();
+      setState(() {});
+
+      commissionTypeList.clear();
+      selectedUserCommissionType = null;
+
+      getCommissionType(type: selectedUserTypeValue!, providerId: selectedProviderId).then((value) {
+        commissionTypeList = value.userTypeData.validate();
+
+        _valueNotifier.notifyListeners();
+      }).catchError((e) {
+        commissionTypeList = [UserTypeData(name: languages.lblSelectCommission, id: -1)];
+        log(e.toString());
+      });
+    }
   }
 
+  // Termas of service and Provacy policy text
   Widget _buildTcAcceptWidget() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        SelectedItemWidget(isSelected: isAcceptedTc).onTap(() async {
-          isAcceptedTc = !isAcceptedTc;
-          setState(() {});
-        }),
+        ValueListenableBuilder(
+          valueListenable: _valueNotifier,
+          builder: (context, value, child) => SelectedItemWidget(isSelected: isAcceptedTc).onTap(() async {
+            isAcceptedTc = !isAcceptedTc;
+            _valueNotifier.notifyListeners();
+          }),
+        ),
         16.width,
         RichTextWidget(
           list: [
@@ -347,13 +525,69 @@ class _SignUpScreenState extends State<SignUpScreen> {
     ).paddingAll(16);
   }
 
-  //endregion
+  // Already have an account with sign in text
+  Widget _buildFooterWidget() {
+    return Column(
+      children: [
+        16.height,
+        RichTextWidget(
+          list: [
+            TextSpan(text: "${languages.alreadyHaveAccountTxt}? ", style: secondaryTextStyle()),
+            TextSpan(
+              text: languages.signIn,
+              style: boldTextStyle(color: primaryColor),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  finish(context);
+                },
+            ),
+          ],
+        ),
+        30.height,
+      ],
+    );
+  }
 
-  //region Methods
+  //----------------------------- Helper Functions----------------------------//
+  // Change country code function...
+  Future<void> changeCountry() async {
+    showCountryPicker(
+      context: context,
+      countryListTheme: CountryListThemeData(
+        textStyle: secondaryTextStyle(color: textSecondaryColorGlobal),
+        searchTextStyle: primaryTextStyle(),
+        inputDecoration: InputDecoration(
+          labelText: languages.search,
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: const Color(0xFF8C98A8).withOpacity(0.2),
+            ),
+          ),
+        ),
+      ),
+      showPhoneCode: true, // optional. Shows phone code before the country name.
+      onSelect: (Country country) {
+        selectedCountry = country;
+        _valueNotifier.notifyListeners();
+      },
+    );
+  }
+
+  // Build mobile number with phone code and number
+  String buildMobileNumber() {
+    if (mobileCont.text.isEmpty) {
+      return '';
+    } else {
+      return '${selectedCountry.phoneCode}-${mobileCont.text.trim()}';
+    }
+  }
+
+  // Sign up user
   void saveUser() async {
     if (formKey.currentState!.validate()) {
-      if (selectedUserTypeData != null && selectedUserTypeData!.id == -1) {
-        return toast(languages.pleaseSelectUserType);
+      if (selectedUserCommissionType == null || selectedUserCommissionType!.id == -1) {
+        return toast(languages.pleaseSelectCommission);
       }
 
       formKey.currentState!.save();
@@ -374,18 +608,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
           UserKeys.designation: designationCont.text.trim(),
           UserKeys.status: 0,
         };
+        print(request);
+        if (selectedProvider != null) {
+          request.putIfAbsent(UserKeys.providerId, () => selectedProviderId);
+        }
 
         if (selectedUserTypeValue == USER_TYPE_PROVIDER) {
-          request.putIfAbsent(UserKeys.providerTypeId, () => selectedUserTypeData!.id.toString());
+          request.putIfAbsent(UserKeys.providerTypeId, () => selectedUserCommissionType!.id.toString());
         } else {
-          request.putIfAbsent(UserKeys.handymanTypeId, () => selectedUserTypeData!.id.toString());
+          request.putIfAbsent(UserKeys.handymanTypeId, () => selectedUserCommissionType!.id.toString());
         }
 
         log(request);
 
         await registerUser(request).then((userRegisterData) async {
           appStore.setLoading(false);
-
           toast(userRegisterData.message.validate());
 
           push(SignInScreen(), isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
@@ -400,39 +637,5 @@ class _SignUpScreenState extends State<SignUpScreen> {
     }
   }
 
-  //endregion
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBarWidget(
-        "",
-        elevation: 0,
-        color: context.scaffoldBackgroundColor,
-        systemUiOverlayStyle: SystemUiOverlayStyle(statusBarIconBrightness: getStatusBrightness(val: appStore.isDarkMode), statusBarColor: context.scaffoldBackgroundColor),
-      ),
-      body: SizedBox(
-        width: context.width(),
-        child: Stack(
-          children: [
-            Form(
-              key: formKey,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildTopWidget(),
-                    _buildFormWidget(),
-                    _buildFooterWidget(),
-                  ],
-                ),
-              ),
-            ),
-            Observer(builder: (context) => LoaderWidget().center().visible(appStore.isLoading))
-          ],
-        ),
-      ),
-    );
-  }
+//endregion
 }

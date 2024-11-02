@@ -848,6 +848,31 @@ mixin _$AppStore on _AppStore, Store {
     return _$setTotalBookingAsyncAction.run(() => super.setTotalBooking(val));
   }
 
+  late final _$userWalletAmountAtom =
+  Atom(name: '_AppStore.userWalletAmount', context: context);
+
+  @override
+  num get userWalletAmount {
+    _$userWalletAmountAtom.reportRead();
+    return super.userWalletAmount;
+  }
+
+  @override
+  set userWalletAmount(num value) {
+    _$userWalletAmountAtom.reportWrite(value, super.userWalletAmount, () {
+      super.userWalletAmount = value;
+    });
+  }
+
+  late final _$setUserWalletAmountAsyncAction =
+  AsyncAction('_AppStore.setUserWalletAmount', context: context);
+
+  @override
+  Future<void> setUserWalletAmount() {
+    return _$setUserWalletAmountAsyncAction
+        .run(() => super.setUserWalletAmount());
+  }
+
   late final _$setCompletedBookingAsyncAction =
       AsyncAction('_AppStore.setCompletedBooking', context: context);
 

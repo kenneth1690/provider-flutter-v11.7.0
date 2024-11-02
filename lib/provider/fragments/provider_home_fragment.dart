@@ -38,8 +38,8 @@ class _ProviderHomeFragmentState extends State<ProviderHomeFragment> {
     init();
   }
 
-  void init() async {
-    future = providerDashboard().whenComplete(() {
+  void init({bool forceSyncAppConfigurations = false}) async {
+    future = providerDashboard(forceSyncAppConfigurations: forceSyncAppConfigurations).whenComplete(() {
       setState(() {});
     });
   }
@@ -126,11 +126,15 @@ class _ProviderHomeFragmentState extends State<ProviderHomeFragment> {
                   children: [
                     if (appStore.earningTypeSubscription) planBanner(snap.data!),
                     _buildHeaderWidget(snap.data!),
-                    TodayCashComponent(todayCashAmount: snap.data!.todayCashAmount.validate()),
+                    TodayCashComponent(totalCashInHand: snap.data!.totalCashInHand.validate()),
                     TotalComponent(snap: snap.data!),
                     ChartComponent(),
                     HandymanRecentlyOnlineComponent(images: snap.data!.onlineHandyman.validate()),
-                    HandymanListComponent(list: snap.data!.handyman.validate()),
+                    HandymanListComponent(
+                      list: snap.data!.handyman.validate(),
+                      totalActiveHandyman: snap.data!.totalActiveHandyman.validate(),
+                      onRefresh: init,
+                    ),
                     UpcomingBookingComponent(bookingData: snap.data!.upcomingBookings.validate()),
                     JobListComponent(list: snap.data!.myPostJobData.validate()).paddingOnly(left: 16, right: 16, top: 8),
                     ServiceListComponent(list: snap.data!.service.validate()),
@@ -139,7 +143,7 @@ class _ProviderHomeFragmentState extends State<ProviderHomeFragment> {
                     page = 1;
                     appStore.setLoading(true);
 
-                    init();
+                    init(forceSyncAppConfigurations: true);
                     setState(() {});
 
                     return await 2.seconds.delay;

@@ -64,6 +64,7 @@ import '../models/google_places_model.dart';
 import '../models/my_bid_response.dart';
 import '../models/request_list_response.dart';
 import '../models/wallet_history_list_response.dart';
+import '../models/wallet_response.dart';
 import '../provider/jobRequest/models/bidder_data.dart';
 import '../provider/jobRequest/models/post_job_data.dart';
 import '../utils/app_configuration.dart';
@@ -141,6 +142,10 @@ Future<void> clearPreferences() async {
   cachedPaymentList = null;
   cachedNotifications = null;
   cachedBookingStatusDropdown = null;
+  cachedWalletList = null;
+  cachedHandymanList = null;
+  cachedTotalDataList = null;
+  cachedBankList = null;
 
   await appStore.setFirstName('');
   await appStore.setLastName('');
@@ -162,6 +167,8 @@ Future<void> clearPreferences() async {
   await appStore.setTester(false);
   await removeKey(IS_SUBSCRIBED_FOR_PUSH_NOTIFICATION);
 
+  appStore.setUserWalletAmount();
+
   try {
     FirebaseAuth.instance.signOut();
   } catch (e) {
@@ -175,6 +182,10 @@ Future<void> logoutApi() async {
 
 Future<RegisterResponse> registerUser(Map request) async {
   return RegisterResponse.fromJson(await (handleResponse(await buildHttpResponse('register', request: request, method: HttpMethodType.POST))));
+}
+
+Future changeLanguage(Map request) async {
+  return RegisterResponse.fromJson(await (handleResponse(await buildHttpResponse('switch-language', request: request, method: HttpMethodType.POST))));
 }
 
 Future<UserData> loginUser(Map request) async {
@@ -305,7 +316,7 @@ Future<void> getAppConfigurations({bool isCurrentLocation = false, double? lat, 
   } else {
     try {
       AppConfigurationModel? res =
-          AppConfigurationModel.fromJsonMap(await handleResponse(await buildHttpResponse('configurations?is_authenticated=${appStore.isLoggedIn.getIntBool()}', method: HttpMethodType.POST)));
+          AppConfigurationModel.fromJsonMap(await handleResponse(await buildHttpResponse('configurations?is_authenticated=${appStore.isLoggedIn.getIntBool()}', method: HttpMethodType.POST, request: appStore.isLoggedIn? {'user_id':appStore.userId}:null)));
 
       await setAppConfigurations(res);
     } catch (e) {
@@ -317,7 +328,7 @@ Future<void> getAppConfigurations({bool isCurrentLocation = false, double? lat, 
 //endregion
 
 //region Provider API
-Future<DashboardResponse> providerDashboard() async {
+Future<DashboardResponse> providerDashboard({bool forceSyncAppConfigurations = false}) async {
   final completer = Completer<DashboardResponse>();
 
   try {
@@ -327,7 +338,7 @@ Future<DashboardResponse> providerDashboard() async {
 
     cachedProviderDashboardResponse = data;
 
-    appStore.setTotalHandyman(data.totalHandyman.validate());
+    appStore.setTotalHandyman(data.totalActiveHandyman.validate());
 
     setValue(IS_EMAIL_VERIFIED, data.isEmailVerified.getBoolInt());
 
@@ -346,6 +357,8 @@ Future<DashboardResponse> providerDashboard() async {
       );
     }
 
+    // Sync new configurations for secret keys
+    if (forceSyncAppConfigurations) await setValue(LAST_APP_CONFIGURATION_SYNCED_TIME, 0);
     getAppConfigurations();
 
     appStore.setLoading(false);
@@ -367,7 +380,7 @@ Future<CommonResponseModel> deleteProviderDoc(int? id) async {
 //endregion
 
 //region Handyman API
-Future<HandymanDashBoardResponse> handymanDashboard() async {
+Future<HandymanDashBoardResponse> handymanDashboard({bool forceSyncAppConfigurations = false}) async {
   final completer = Completer<HandymanDashBoardResponse>();
 
   try {
@@ -387,6 +400,8 @@ Future<HandymanDashBoardResponse> handymanDashboard() async {
       setValue(DASHBOARD_COMMISSION, jsonEncode(data.commission));
     }
 
+    // Sync new configurations for secret keys
+    if (forceSyncAppConfigurations) await setValue(LAST_APP_CONFIGURATION_SYNCED_TIME, 0);
     getAppConfigurations();
 
     appStore.setLoading(false);
@@ -416,6 +431,37 @@ Future<List<UserData>> getHandyman({int? page, int? providerId, String? userType
     lastPageCallback?.call(res.data.validate().length != PER_PAGE_ITEM);
 
     cachedHandymanList = res.data;
+
+    appStore.setLoading(false);
+  } catch (e) {
+    appStore.setLoading(false);
+
+    throw e;
+  }
+  return list;
+}
+
+Future<List<UserData>> getProviderList({
+  int page = 1,
+  int perPage = PER_PAGE_ITEM,
+  String? status,
+  String? keyword,
+  required List<UserData> list,
+  Function(bool)? lastPageCallback,
+}) async {
+  try {
+    String search = keyword.validate().isNotEmpty ? '&keyword=$keyword' : '';
+    String providerStatus = status.validate().isNotEmpty ? "&status=$status" : "";
+
+    var res = UserListResponse.fromJson(
+      await handleResponse(await buildHttpResponse('user-list?user_type=provider$search$providerStatus&per_page=$perPage&page=$page', method: HttpMethodType.GET)),
+    );
+
+    if (page == 1) list.clear();
+
+    list.addAll(res.data.validate());
+
+    lastPageCallback?.call(res.data.validate().length != PER_PAGE_ITEM);
 
     appStore.setLoading(false);
   } catch (e) {
@@ -460,11 +506,9 @@ Future<BaseResponseModel> restoreHandyman(Map request) async {
 //region Service API
 Future<ServiceResponse> getServiceList(int page, int providerId, {String? searchTxt, bool isSearch = false, int? categoryId, bool isCategoryWise = false}) async {
   if (isCategoryWise) {
-    return ServiceResponse.fromJson(
-        await handleResponse(await buildHttpResponse('service-list?per_page=$PER_PAGE_ITEM&category_id=$categoryId&page=$page&provider_id=$providerId', method: HttpMethodType.GET)));
+    return ServiceResponse.fromJson(await handleResponse(await buildHttpResponse('service-list?per_page=$PER_PAGE_ITEM&category_id=$categoryId&page=$page&provider_id=$providerId', method: HttpMethodType.GET)));
   } else if (isSearch) {
-    return ServiceResponse.fromJson(
-        await handleResponse(await buildHttpResponse('service-list?per_page=$PER_PAGE_ITEM&page=$page&search=$searchTxt&provider_id=$providerId', method: HttpMethodType.GET)));
+    return ServiceResponse.fromJson(await handleResponse(await buildHttpResponse('service-list?per_page=$PER_PAGE_ITEM&page=$page&search=$searchTxt&provider_id=$providerId', method: HttpMethodType.GET)));
   } else {
     return ServiceResponse.fromJson(await handleResponse(await buildHttpResponse('service-list?per_page=$PER_PAGE_ITEM&page=$page&provider_id=$providerId', method: HttpMethodType.GET)));
   }
@@ -539,16 +583,28 @@ Future<List<BookingStatusResponse>> bookingStatus({required List<BookingStatusRe
   return list;
 }
 
-Future<UpdateLocationResponse> updateLocation(String bookingId, String latitude, String longitude) async {
-  return UpdateLocationResponse.fromJson(await handleResponse(await buildHttpResponse("update-location?booking_id=$bookingId&latitude=$latitude&longitude=$longitude", method: HttpMethodType.POST)));
+Future<UpdateLocationResponse> updateLocation(int bookingId, String latitude, String longitude) async {
+  return UpdateLocationResponse.fromJson(
+      await handleResponse(await buildHttpResponse("update-location?booking_id=$bookingId&latitude=$latitude&longitude=$longitude", method: HttpMethodType.POST).timeout(Duration(seconds: GET_LOCATION_API_TIMEOUT_SECOND))));
 }
 
-Future<UpdateLocationResponse> getHandymanLocation(String bookingId) async {
-  return UpdateLocationResponse.fromJson(await handleResponse(await buildHttpResponse("get-location?booking_id=$bookingId", method: HttpMethodType.GET)));
+Future<UpdateLocationResponse> getHandymanLocation(int bookingId) async {
+  return UpdateLocationResponse.fromJson(await handleResponse(await buildHttpResponse("get-location?booking_id=$bookingId", method: HttpMethodType.GET).timeout(Duration(seconds: GET_LOCATION_API_TIMEOUT_SECOND))));
 }
 
-Future<List<BookingData>> getBookingList(int page,
-    {var perPage = PER_PAGE_ITEM, String status = '', String searchText = '', required List<BookingData> bookings, Function(bool)? lastPageCallback}) async {
+Future<num> getUserWalletBalance() async {
+  try {
+    var res = WalletResponse.fromJson(await handleResponse(await buildHttpResponse('user-wallet-balance', method: HttpMethodType.GET)));
+
+    return res.balance.validate();
+  } catch (e) {
+    appStore.setLoading(false);
+    log(e);
+    return appStore.userWalletAmount;
+  }
+}
+
+Future<List<BookingData>> getBookingList(int page, {var perPage = PER_PAGE_ITEM, String status = '', String searchText = '', required List<BookingData> bookings, Function(bool)? lastPageCallback}) async {
   try {
     BookingListResponse res;
     String searchParam = searchText.isNotEmpty ? '&search=$searchText' : '';
@@ -629,24 +685,24 @@ Future<List<ServiceData>> getSearchList(
   }
 }
 
-Future<BookingDetailResponse> bookingDetail(Map request) async {
+Future<BookingDetailResponse> bookingDetail(Map request, {Function(String, int)? callbackForStatus}) async {
   BookingDetailResponse bookingDetailResponse = BookingDetailResponse.fromJson(
     await handleResponse(await buildHttpResponse('booking-detail', request: request, method: HttpMethodType.POST)),
   );
-
+  callbackForStatus?.call(bookingDetailResponse.bookingDetail!.status.validate(),bookingDetailResponse.handymanData?.isNotEmpty ?? false ? bookingDetailResponse.handymanData!.firstOrNull!.id.validate() : bookingDetailResponse.providerData!.id.validate());
   appStore.setLoading(false);
-
   if (cachedBookingDetailList.any((element) => element.bookingDetail!.id == bookingDetailResponse.bookingDetail!.id)) {
     cachedBookingDetailList.removeWhere((element) => element.bookingDetail!.id == bookingDetailResponse.bookingDetail!.id);
   }
   cachedBookingDetailList.add(bookingDetailResponse);
-
   return bookingDetailResponse;
 }
 
 Future<BaseResponseModel> bookingUpdate(Map request) async {
   var res = BaseResponseModel.fromJson(await handleResponse(await buildHttpResponse('booking-update', request: request, method: HttpMethodType.POST)));
   LiveStream().emit(LIVESTREAM_UPDATE_BOOKINGS);
+
+  appStore.setLoading(false);
 
   return res;
 }
@@ -696,15 +752,13 @@ Future<BaseResponseModel> removeAddress(int? id) async {
 
 //region Reviews API
 Future<List<RatingData>> serviceReviews(Map request) async {
-  ServiceReviewResponse res =
-      ServiceReviewResponse.fromJson(await handleResponse(await buildHttpResponse('service-reviews?per_page=$PER_PAGE_ITEM_ALL', request: request, method: HttpMethodType.POST)));
+  ServiceReviewResponse res = ServiceReviewResponse.fromJson(await handleResponse(await buildHttpResponse('service-reviews?per_page=$PER_PAGE_ITEM_ALL', request: request, method: HttpMethodType.POST)));
 
   return res.data.validate();
 }
 
 Future<List<RatingData>> handymanReviews(Map request) async {
-  ServiceReviewResponse res =
-      ServiceReviewResponse.fromJson(await handleResponse(await buildHttpResponse('handyman-reviews?per_page=$PER_PAGE_ITEM_ALL', request: request, method: HttpMethodType.POST)));
+  ServiceReviewResponse res = ServiceReviewResponse.fromJson(await handleResponse(await buildHttpResponse('handyman-reviews?per_page=$PER_PAGE_ITEM_ALL', request: request, method: HttpMethodType.POST)));
   return res.data.validate();
 }
 //endregion
@@ -787,9 +841,9 @@ Future<void> savePayment({
     appStore.setLoading(true);
     log('Request : $planRequestModel');
 
-    await saveSubscription(planRequestModel.toJson()).then((value) {
-      toast("${data.title.validate()}  ${languages.successfullyActivated}");
-      // toast("${data.title.validate()} ${languages.lblIsSuccessFullyActivated}");
+    await saveSubscription(planRequestModel.toJson()).then((value) async {
+      toast("${data.title.validate()} ${languages.successfullyActivated}");
+      await setValue(LAST_APP_CONFIGURATION_SYNCED_TIME, 0);
       push(ProviderDashboardScreen(index: 0), isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
     }).catchError((e) {
       log(e.toString());
@@ -989,7 +1043,7 @@ Future<DocumentListResponse> getDocList() async {
 Future<List<TotalData>> getTotalEarningList(int page, List<TotalData> list, Function(bool)? lastPageCallback, {var perPage = PER_PAGE_ITEM}) async {
   try {
     var res = TotalEarningResponse.fromJson(
-      await handleResponse(await buildHttpResponse('${isUserTypeProvider ? 'provider-payout-list' : 'handyman-payout-list'}?per_page="${perPage}"&page=$page', method: HttpMethodType.GET)),
+      await handleResponse(await buildHttpResponse('${isUserTypeProvider ? 'provider-payout-list' : 'handyman-payout-list'}?per_page=$perPage&page=$page', method: HttpMethodType.GET)),
     );
 
     if (page == 1) list.clear();
@@ -1007,8 +1061,10 @@ Future<List<TotalData>> getTotalEarningList(int page, List<TotalData> list, Func
   }
 }
 
-Future<UserTypeResponse> getUserType({String type = USER_TYPE_PROVIDER}) async {
-  return UserTypeResponse.fromJson(await handleResponse(await buildHttpResponse('type-list?type=$type')));
+Future<UserTypeResponse> getCommissionType({String type = USER_TYPE_PROVIDER, int? providerId, bool? isDelete}) async {
+  String providerUserId = providerId != null ? "&provider_id=$providerId" : '';
+  String isDeleteFlag = isDelete ?? false ? "&is_delete=true" : "";
+  return UserTypeResponse.fromJson(await handleResponse(await buildHttpResponse('type-list?type=$type$providerUserId$isDeleteFlag')));
 }
 
 Future<BaseResponseModel> deleteAccountCompletely() async {
@@ -1321,3 +1377,17 @@ Future<UserInfoResponse> getBankDetail(int id) async {
 Future<BaseResponseModel> withdrawRequest(Map request) async {
   return BaseResponseModel.fromJson(await handleResponse(await buildHttpResponse('save-provideraddress', request: request, method: HttpMethodType.POST)));
 }
+
+//region Add Handyman Commission
+Future<BaseResponseModel> saveProviderHandymanTypeList({required Map request}) async {
+  return BaseResponseModel.fromJson(await handleResponse(await buildHttpResponse('handymantype-save', method: HttpMethodType.POST, request: request)));
+}
+
+Future<BaseResponseModel> deleteProviderHandymanTypeList(int id) async {
+  return BaseResponseModel.fromJson(await handleResponse(await buildHttpResponse('handymantype-delete/$id', method: HttpMethodType.POST)));
+}
+
+Future<BaseResponseModel> restoreProviderHandymanType(Map request) async {
+  return BaseResponseModel.fromJson(await handleResponse(await buildHttpResponse('handymantype-action', request: request, method: HttpMethodType.POST)));
+}
+//end region Add Handyman Commission

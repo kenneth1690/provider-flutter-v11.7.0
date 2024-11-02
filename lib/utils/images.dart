@@ -82,3 +82,5 @@ const ic_diagonal_left_down_arrow = 'assets/icons/ic_diagonal_left_down_arrow.pn
 const ic_diagonal_right_up_arrow = 'assets/icons/ic_diagonal_right_up_arrow.png';
 const indicator_2 = 'assets/images/indicator_2.png';
 const ic_fill_textMsg = "assets/icons/ic_fill_textMsg.png";
+const ic_profile = 'assets/icons/ic_profile.png';
+const ic_status = 'assets/icons/ic_status.png';

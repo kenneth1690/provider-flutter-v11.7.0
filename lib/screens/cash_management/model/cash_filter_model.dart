@@ -17,6 +17,9 @@ List<CashFilterModel> getCashFilterList() {
 
   list.add(CashFilterModel(name: languages.today, type: TODAY));
   list.add(CashFilterModel(name: languages.yesterday, type: YESTERDAY));
+  list.add(CashFilterModel(name: languages.thisWeek, type: THIS_WEEK));
+  list.add(CashFilterModel(name: languages.thisMonth, type: THIS_MONTH));
+  list.add(CashFilterModel(name: languages.thisYear, type: THIS_YEAR));
   list.add(CashFilterModel(name: languages.customDate, type: CUSTOM));
 
   return list;
@@ -27,7 +30,7 @@ List<CashFilterModel> getCashStatusFilterList() {
 
   list.add(CashFilterModel(name: languages.all, type: null));
   list.add(CashFilterModel(name: handleStatusText(status: APPROVED_BY_HANDYMAN), type: APPROVED_BY_HANDYMAN));
-  list.add(CashFilterModel(name: handleStatusText(status: SEND_TO_PROVIDER), type: SEND_TO_PROVIDER));
+  list.add(CashFilterModel(name: handleStatusText(status: SEND_TO_PROVIDER), type: PENDING_BY_PROVIDER));
   list.add(CashFilterModel(name: handleStatusText(status: APPROVED_BY_PROVIDER), type: APPROVED_BY_PROVIDER));
 
   return list;
@@ -41,7 +44,7 @@ List<CashFilterModel> getCashStatusProviderFilterList() {
   list.add(CashFilterModel(name: languages.all, type: null));
   list.add(CashFilterModel(name: handleStatusText(status: PENDING_BY_PROVIDER), type: PENDING_BY_PROVIDER));
   list.add(CashFilterModel(name: handleStatusText(status: APPROVED_BY_PROVIDER), type: APPROVED_BY_PROVIDER));
-  list.add(CashFilterModel(name: handleStatusText(status: SEND_TO_ADMIN), type: SEND_TO_ADMIN));
+  list.add(CashFilterModel(name: handleStatusText(status: SEND_TO_ADMIN), type: PENDING_BY_ADMIN));
   list.add(CashFilterModel(name: handleStatusText(status: APPROVED_BY_ADMIN), type: APPROVED_BY_ADMIN));
 
   return list;

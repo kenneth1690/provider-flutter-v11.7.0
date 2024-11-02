@@ -116,6 +116,7 @@ class BookingFragmentState extends State<BookingFragment> with SingleTickerProvi
               return AnimatedScrollView(
                 controller: scrollController,
                 listAnimationType: ListAnimationType.FadeIn,
+                physics: AlwaysScrollableScrollPhysics(),
                 fadeInConfiguration: FadeInConfiguration(duration: 2.seconds),
                 onSwipeRefresh: () async {
                   page = 1;

@@ -127,11 +127,11 @@ class _PricingPlanScreenState extends State<PricingPlanScreen> {
                                             if (data.trialPeriod.validate() != 0 && data.identifier == FREE)
                                               RichText(
                                                 text: TextSpan(
-                                                  text: ' ( ${languages.lblTrialFor} ',
+                                                  text: ' (${languages.lblTrialFor} ',
                                                   style: secondaryTextStyle(),
                                                   children: <TextSpan>[
-                                                    TextSpan(text: '${data.trialPeriod.validate()}', style: boldTextStyle()),
-                                                    TextSpan(text: '  ${languages.lblDays} )', style: secondaryTextStyle()),
+                                                    TextSpan(text: ' ${data.trialPeriod.validate()} ', style: boldTextStyle()),
+                                                    TextSpan(text: '${languages.lblDays})', style: secondaryTextStyle()),
                                                   ],
                                                 ),
                                               )
@@ -273,6 +273,7 @@ class _PricingPlanScreenState extends State<PricingPlanScreen> {
 
                       push(ProviderDashboardScreen(index: 0), isNewTask: true, pageRouteAnimation: PageRouteAnimation.Fade);
                     }).catchError((e) {
+                      toast(e.toString());
                       appStore.setLoading(false);
                       log(e.toString());
                     });

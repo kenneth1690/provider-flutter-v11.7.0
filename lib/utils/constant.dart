@@ -13,6 +13,7 @@ const PLAN_REMAINING_DAYS = 15;
 const LABEL_TEXT_SIZE = 14;
 const APP_BAR_TEXT_SIZE = 18;
 const List<String> RTL_LANGUAGES = ['ar', 'ur'];
+const GET_LOCATION_API_TIMEOUT_SECOND = 15;
 
 //endregion
 
@@ -28,6 +29,7 @@ const STRIPE_CURRENCY_CODE = 'INR';
 //region Commission Types
 const COMMISSION_TYPE_PERCENT = 'percent';
 const COMMISSION_TYPE_FIXED = 'fixed';
+const COMMISSION_TYPE_PERCENTAGE = 'percentage';
 //endregion
 
 const TAX_TYPE_PERCENT = 'percent';

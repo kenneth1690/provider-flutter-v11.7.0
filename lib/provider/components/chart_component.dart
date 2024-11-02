@@ -30,17 +30,29 @@ class ChartComponent extends StatelessWidget {
           textStyle: secondaryTextStyle(),
         ),
         backgroundColor: context.cardColor,
-        primaryYAxis: NumericAxis(numberFormat: NumberFormat.compactCurrency(symbol: appConfigurationStore.currencySymbol, decimalDigits: 2)),
+        primaryYAxis: NumericAxis(numberFormat: NumberFormat.compactCurrency(symbol: appConfigurationStore.currencySymbol, decimalDigits: 2),
+          labelStyle: primaryTextStyle(size: 12)),
         primaryXAxis: CategoryAxis(
           placeLabelsNearAxisLine: true,
           labelPlacement: LabelPlacement.onTicks,
           majorGridLines: MajorGridLines(width: 0),
           axisLine: AxisLine(width: 0),
+          labelStyle: primaryTextStyle(size: 12),
         ),
         crosshairBehavior: CrosshairBehavior(
           activationMode: ActivationMode.singleTap,
           lineType: CrosshairLineType.horizontal,
           enable: true,
+        ),
+        trackballBehavior: TrackballBehavior(
+          enable: true,
+          hideDelay: 4000,
+          activationMode: ActivationMode.singleTap,
+          tooltipSettings: InteractiveTooltip(
+            enable: true,
+            format: 'point.x : point.y',
+            canShowMarker: true
+          ),
         ),
         tooltipBehavior: TooltipBehavior(
           enable: true,

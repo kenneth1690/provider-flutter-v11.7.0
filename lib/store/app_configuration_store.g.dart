@@ -444,6 +444,23 @@ mixin _$AppConfigurationStore on _AppConfigurationStore, Store {
     });
   }
 
+  late final _$isUserAuthorizedAtom= Atom(
+      name: '_AppConfigurationStore.isUserAuthorized', context: context);
+
+  @override
+  bool get isUserAuthorized {
+    _$isUserAuthorizedAtom.reportRead();
+    return super.isUserAuthorized;
+  }
+
+  @override
+  set isUserAuthorized(bool value) {
+    _$isUserAuthorizedAtom
+        .reportWrite(value, super.isUserAuthorized, () {
+      super.isUserAuthorized = value;
+    });
+  }
+
   late final _$setAutoAssignStatusAsyncAction = AsyncAction('_AppConfigurationStore.setAutoAssignStatus', context: context);
 
   @override
@@ -686,7 +703,8 @@ privacyPolicy: ${privacyPolicy},
 termConditions: ${termConditions},
 helpAndSupport: ${helpAndSupport},
 refundPolicy: ${refundPolicy},
-autoAssignStatus: ${autoAssignStatus}
+autoAssignStatus: ${autoAssignStatus},
+isUserAuthorized: ${isUserAuthorized}
     ''';
   }
 }
